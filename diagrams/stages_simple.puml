@@ -1,0 +1,110 @@
+@startmindmap
+
+title System Design Learning Path - Simplified
+
+* System Design\n12-Month Journey
+
+left side
+
+** Month 1-3\nFoundation
+*** Computer Networks
+**** TCP/IP, HTTP, DNS, WebSocket
+*** Database
+**** SQL, Indexing, Transactions, ACID
+*** Programming
+**** Data Structures, Algorithms
+**** Design Patterns, OOP
+*** Web Development
+**** MVC, REST API
+**** Authentication (Session, JWT)
+*** Project
+**** Todo List API
+
+** Month 4-6\nCore Concepts
+*** Caching
+**** Strategies (Cache Aside, etc.)
+**** Redis (Data Structures, Cluster)
+**** Problems & Solutions
+**** Cache Consistency
+*** Database Scaling
+**** Replication (Master-Slave)
+**** Sharding (Consistent Hashing)
+**** Distributed Transactions
+*** Message Queue
+**** Kafka (High Throughput)
+**** RabbitMQ (Flexible Routing)
+**** Use Cases
+*** Load Balancing
+**** Algorithms
+**** L4 vs L7
+*** Microservices
+**** Service Discovery
+**** API Gateway
+**** Circuit Breaker
+**** Distributed Tracing
+*** Project
+**** E-commerce Microservices
+
+right side
+
+** Month 7-9\nAdvanced Topics
+*** Distributed Theory
+**** CAP Theorem
+**** Consistency Models
+**** Consensus (Paxos, Raft)
+*** Coordination
+**** ZooKeeper
+**** etcd
+**** Distributed Lock
+**** Distributed ID
+*** Data Processing
+**** OLTP vs OLAP
+**** Stream Processing
+***** Kafka Streams, Flink
+**** Batch Processing
+***** Hadoop, Spark
+*** NoSQL
+**** Key-Value (Redis, DynamoDB)
+**** Document (MongoDB)
+**** Column (Cassandra)
+**** Graph (Neo4j)
+*** NewSQL
+**** TiDB, CockroachDB, Spanner
+
+** Month 10-12\nPractice & Interview
+*** Basic Problems
+**** URL Shortener
+**** Rate Limiter
+**** Consistent Hashing
+**** Unique ID Generator
+*** Intermediate
+**** News Feed (Twitter/Facebook)
+**** Chat System (WhatsApp)
+**** Notification System
+**** Web Crawler
+**** Typeahead
+*** Advanced
+**** Video Streaming (YouTube)
+**** Search Engine (Google)
+**** Recommendation (Netflix)
+**** Payment System (Stripe)
+**** Ride-sharing (Uber)
+*** Infrastructure
+**** Docker & Kubernetes
+**** Monitoring (Prometheus, ELK)
+**** Cloud (AWS, GCP)
+**** Security
+*** Interview Prep
+**** Design Framework
+***** Requirements
+***** API Design
+***** Data Model
+***** Architecture
+***** Deep Dive
+**** Mock Interviews
+**** Study Resources
+***** DDIA Book
+***** MIT 6.824
+***** Engineering Blogs
+
+@endmindmap

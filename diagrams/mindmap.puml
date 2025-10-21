@@ -1,0 +1,1789 @@
+@startmindmap
+
+title System Design Complete Concept Map
+
+* System Design
+
+left side
+
+** Architecture\nPatterns
+*** Layered Architecture
+**** Presentation Layer
+**** Business Logic Layer
+**** Data Access Layer
+**** Persistence Layer
+*** Microservices
+**** Service Discovery
+***** Consul
+***** Eureka
+***** Nacos
+***** etcd
+**** API Gateway
+***** Kong
+***** Spring Cloud Gateway
+***** Zuul
+**** Service Mesh
+***** Istio
+***** Linkerd
+***** Envoy
+**** Inter-Service Communication
+***** REST
+***** gRPC
+***** Message Queue
+*** Event-Driven Architecture
+**** Event Sourcing
+**** CQRS
+**** Pub-Sub Pattern
+**** Event Bus
+*** Monolithic Architecture
+**** Single Deployment Unit
+**** Shared Database
+**** Tight Coupling
+*** Serverless Architecture
+**** FaaS
+***** AWS Lambda
+***** Azure Functions
+***** Google Cloud Functions
+**** BaaS
+**** Cold Start Problem
+*** SOA (Service-Oriented)
+*** Pipeline-Filter Architecture
+
+** Communication\nPatterns
+*** Synchronous Communication
+**** HTTP/HTTPS
+***** REST
+****** GET/POST/PUT/DELETE
+****** Stateless
+****** Resource-based
+***** GraphQL
+****** Query Language
+****** Single Endpoint
+****** Over-fetching Solution
+**** RPC
+***** gRPC
+****** Protocol Buffers
+****** HTTP/2
+****** Streaming Support
+***** Apache Thrift
+***** JSON-RPC
+*** Asynchronous Communication
+**** Message Queue
+***** RabbitMQ
+****** AMQP Protocol
+****** Exchange Types
+****** Durable Queues
+***** Apache Kafka
+****** Topic-based
+****** Partition
+****** Consumer Group
+****** High Throughput
+***** RocketMQ
+***** ActiveMQ
+**** Event Bus
+**** Callback
+**** Webhook
+*** Streaming Communication
+**** WebSocket
+***** Full-duplex
+***** Persistent Connection
+***** Real-time Updates
+**** Server-Sent Events (SSE)
+***** Unidirectional
+***** HTTP-based
+**** HTTP Streaming
+**** gRPC Streaming
+***** Client Streaming
+***** Server Streaming
+***** Bidirectional Streaming
+*** Request-Response Pattern
+*** Fire-and-Forget Pattern
+*** Request-Reply Pattern
+
+** Data Storage\nSystems
+*** Relational Database (SQL)
+**** MySQL
+***** InnoDB Engine
+***** MVCC
+***** Transaction Support
+**** PostgreSQL
+***** Advanced Features
+***** JSONB Support
+***** Full-text Search
+**** Oracle
+**** SQL Server
+**** Scaling Strategies
+***** Replication
+****** Master-Slave
+******* Read Scaling
+******* Async Replication
+****** Master-Master
+******* Multi-write
+******* Conflict Resolution
+****** Multi-Master
+***** Sharding (Partitioning)
+****** Horizontal Sharding
+******* Range-based
+******* Hash-based
+******* Geo-based
+******* Directory-based
+****** Vertical Sharding
+******* By Column
+******* By Table
+****** Consistent Hashing
+******* Virtual Nodes
+******* Load Distribution
+******* Minimal Rebalancing
+***** Read-Write Splitting
+****** Write to Master
+****** Read from Replicas
+****** Connection Routing
+**** Indexing
+***** B-Tree Index
+***** B+ Tree Index
+***** Hash Index
+***** Full-text Index
+***** Bitmap Index
+***** Composite Index
+**** Transactions
+***** ACID Properties
+****** Atomicity
+****** Consistency
+****** Isolation
+****** Durability
+***** Isolation Levels
+****** Read Uncommitted
+****** Read Committed
+****** Repeatable Read
+****** Serializable
+*** NoSQL Databases
+**** Key-Value Store
+***** Redis
+****** In-memory
+****** Data Structures
+******* String
+******* List
+******* Set
+******* Sorted Set
+******* Hash
+******* Bitmap
+******* HyperLogLog
+****** Persistence
+******* RDB
+******* AOF
+****** Replication
+****** Cluster Mode
+***** Memcached
+****** Simple KV
+****** LRU Eviction
+****** Distributed Hash
+***** DynamoDB
+****** AWS Managed
+****** Auto-scaling
+***** Riak
+**** Document Store
+***** MongoDB
+****** JSON-like Documents
+****** Flexible Schema
+****** Sharding Support
+****** Replica Sets
+****** Aggregation Pipeline
+***** CouchDB
+***** Couchbase
+***** RavenDB
+**** Column-Family Store
+***** Cassandra
+****** Wide-column
+****** Distributed
+****** Tunable Consistency
+****** No Single Point of Failure
+***** HBase
+****** Hadoop Ecosystem
+****** Strong Consistency
+****** Real-time Read/Write
+***** ScyllaDB
+**** Graph Database
+***** Neo4j
+****** Nodes and Edges
+****** Cypher Query Language
+****** ACID Transactions
+***** JanusGraph
+***** Amazon Neptune
+***** ArangoDB
+**** Time-Series Database
+***** InfluxDB
+****** Optimized for Time-series
+****** Downsampling
+****** Retention Policies
+***** TimescaleDB
+****** PostgreSQL Extension
+***** Prometheus
+****** Metrics Storage
+****** Pull-based
+***** OpenTSDB
+**** Search Engine
+***** Elasticsearch
+****** Inverted Index
+****** Full-text Search
+****** Distributed
+****** Near Real-time
+***** Apache Solr
+***** Algolia
+*** NewSQL
+**** TiDB
+***** Distributed SQL
+***** MySQL Compatible
+***** Horizontal Scaling
+**** CockroachDB
+***** PostgreSQL Compatible
+***** Global Distribution
+***** Serializable Isolation
+**** Google Spanner
+***** Global Consistency
+***** TrueTime API
+**** VoltDB
+*** Object Storage
+**** Amazon S3
+***** Object-based
+***** Highly Durable
+***** Versioning
+**** Google Cloud Storage
+**** Azure Blob Storage
+**** MinIO
+***** Self-hosted
+***** S3 Compatible
+**** Ceph
+*** Data Warehouse
+**** Snowflake
+**** Amazon Redshift
+**** Google BigQuery
+**** Apache Hive
+
+** Caching\nStrategies
+*** Cache Patterns
+**** Cache Aside (Lazy Loading)
+***** Read from Cache
+***** On Miss, Read from DB
+***** Write to Cache
+***** Application Manages Cache
+**** Read Through
+***** Cache Layer Manages
+***** Transparent to Application
+**** Write Through
+***** Write to Cache and DB
+***** Synchronous
+***** Strong Consistency
+**** Write Behind (Write Back)
+***** Write to Cache First
+***** Async Write to DB
+***** Better Performance
+***** Risk of Data Loss
+**** Refresh Ahead
+***** Proactive Refresh
+***** Predict Hot Data
+*** Cache Levels
+**** Client-side Cache
+***** Browser Cache
+****** HTTP Cache Headers
+****** ETag
+****** Cache-Control
+****** Expires
+***** Application Cache
+****** Local Storage
+****** Session Storage
+****** IndexedDB
+***** Mobile App Cache
+**** CDN (Content Delivery Network)
+***** Edge Servers
+***** Geographic Distribution
+***** Static Content
+***** CloudFlare
+***** Akamai
+***** AWS CloudFront
+***** Fastly
+**** Application-level Cache
+***** Local Cache
+****** In-memory
+****** Caffeine (Java)
+****** Guava Cache
+***** Distributed Cache
+****** Redis
+****** Memcached
+****** Hazelcast
+**** Database Cache
+***** Query Cache
+***** Buffer Pool
+***** InnoDB Buffer Pool
+***** Result Cache
+*** Cache Problems
+**** Cache Penetration
+***** Query Non-existent Data
+***** Solutions
+****** Bloom Filter
+****** Cache Null Values
+****** Request Validation
+**** Cache Breakdown (Hotspot Invalid)
+***** Hot Key Expires
+***** High Concurrent Requests
+***** Solutions
+****** Mutex Lock
+****** Never Expire Hot Keys
+****** Logical Expiration
+**** Cache Avalanche
+***** Mass Cache Expiration
+***** Solutions
+****** Random TTL
+****** Cache Warm-up
+****** Multi-level Cache
+****** Circuit Breaker
+**** Thundering Herd
+***** Simultaneous Cache Miss
+***** Solutions
+****** Distributed Lock
+****** Request Coalescing
+*** Cache Eviction Policies
+**** LRU (Least Recently Used)
+**** LFU (Least Frequently Used)
+**** FIFO (First In First Out)
+**** TTL (Time To Live)
+**** Random Replacement
+**** ARC (Adaptive Replacement Cache)
+*** Cache Consistency
+**** Strong Consistency
+***** Update DB then Delete Cache
+***** Distributed Lock
+**** Eventual Consistency
+***** Delete Cache then Update DB
+***** Delayed Double Delete
+***** Binlog Subscription
+****** Canal
+****** Maxwell
+*** Cache Metrics
+**** Hit Rate
+**** Miss Rate
+**** Eviction Rate
+**** Memory Usage
+**** Latency
+
+right side
+
+** Scalability\nPatterns
+*** Vertical Scaling (Scale Up)
+**** Add CPU
+**** Add Memory
+**** Add Storage
+**** Limitations
+***** Hardware Limits
+***** Single Point of Failure
+***** Downtime Required
+*** Horizontal Scaling (Scale Out)
+**** Add More Servers
+**** Distributed System
+**** Load Balancing
+***** Algorithms
+****** Round Robin
+****** Weighted Round Robin
+****** Least Connections
+****** Weighted Least Connections
+****** IP Hash
+****** URL Hash
+****** Consistent Hashing
+******* Virtual Nodes
+******* Minimal Redistribution
+***** Layer 4 (Transport Layer)
+****** TCP/UDP
+****** LVS
+****** HAProxy
+****** AWS NLB
+***** Layer 7 (Application Layer)
+****** HTTP/HTTPS
+****** Nginx
+****** HAProxy
+****** Envoy
+****** AWS ALB
+***** DNS Load Balancing
+****** Geographic Routing
+****** Latency-based Routing
+***** Global Server Load Balancing
+**** Stateless Services
+***** No Session State
+***** Horizontal Scalability
+***** Session Storage
+****** Redis
+****** Database
+****** JWT
+**** Auto-scaling
+***** Horizontal Pod Autoscaler (K8s)
+***** Cloud Auto-scaling Groups
+***** Metrics-based
+****** CPU Usage
+****** Memory Usage
+****** Request Count
+*** Functional Partitioning
+**** Service Decomposition
+**** Domain-Driven Design
+***** Bounded Context
+***** Aggregate
+***** Entity
+***** Value Object
+**** Microservices
+*** Data Partitioning
+**** Sharding
+**** Replication
+**** Federation
+***** Split by Function
+***** Separate Databases
+*** Caching for Scalability
+*** Asynchronous Processing
+**** Message Queues
+**** Background Jobs
+**** Event-driven
+
+** Reliability\nPatterns
+*** Redundancy
+**** Active-Active
+***** All Nodes Handle Traffic
+***** Load Distribution
+***** High Availability
+**** Active-Passive
+***** Standby Nodes
+***** Failover on Failure
+***** Hot Standby
+***** Cold Standby
+**** N+1 Redundancy
+***** One Extra Component
+**** 2N Redundancy
+***** Full Duplication
+*** Fault Tolerance
+**** Failover
+***** Automatic Failover
+****** Health Checks
+****** Leader Election
+***** Manual Failover
+****** Human Intervention
+**** Circuit Breaker
+***** Closed State (Normal)
+***** Open State (Failing)
+***** Half-Open State (Testing)
+***** Hystrix
+***** Resilience4j
+***** Sentinel
+**** Bulkhead
+***** Isolation of Resources
+***** Thread Pools
+***** Connection Pools
+***** Prevent Cascading Failures
+**** Timeout
+***** Connection Timeout
+***** Read Timeout
+***** Prevent Hanging
+**** Retry
+***** Exponential Backoff
+***** Jitter
+***** Max Retry Attempts
+***** Idempotency Required
+**** Fallback
+***** Default Response
+***** Cached Data
+***** Degraded Functionality
+*** Degradation
+**** Graceful Degradation
+***** Core Features Continue
+***** Non-critical Features Disabled
+**** Feature Toggle
+***** Dynamic Enable/Disable
+***** A/B Testing
+***** Gradual Rollout
+**** Throttling
+***** Reduce Load
+***** Protect System
+*** Rate Limiting
+**** Algorithms
+***** Token Bucket
+****** Tokens Added at Fixed Rate
+****** Burst Handling
+****** Smooth Rate Limiting
+***** Leaky Bucket
+****** Fixed Output Rate
+****** Queue-based
+***** Fixed Window
+****** Simple Counter
+****** Window Reset
+***** Sliding Window Log
+****** Accurate
+****** Memory Intensive
+***** Sliding Window Counter
+****** Hybrid Approach
+****** Memory Efficient
+**** Implementation
+***** Application Level
+***** API Gateway Level
+***** Distributed Rate Limiting
+****** Redis
+****** Sliding Window in Redis
+**** Strategies
+***** Per User
+***** Per IP
+***** Per API Key
+***** Global Limit
+*** Monitoring and Observability
+**** Metrics
+***** Prometheus
+****** Time-series Database
+****** Pull-based
+****** PromQL
+***** Grafana
+****** Visualization
+****** Dashboards
+****** Alerting
+***** StatsD
+***** Datadog
+***** New Relic
+**** Logging
+***** ELK Stack
+****** Elasticsearch (Storage)
+****** Logstash (Processing)
+****** Kibana (Visualization)
+***** Fluentd
+****** Log Collector
+****** Unified Logging Layer
+***** Splunk
+***** Loki
+****** Grafana's Log Solution
+**** Distributed Tracing
+***** Zipkin
+****** Request Tracing
+****** Span Collection
+***** Jaeger
+****** Uber's Solution
+****** OpenTracing Compatible
+***** AWS X-Ray
+***** OpenTelemetry
+****** Unified Standard
+****** Vendor Agnostic
+**** Alerting
+***** PagerDuty
+***** Opsgenie
+***** VictorOps
+***** Alert Rules
+****** Threshold-based
+****** Anomaly Detection
+**** Health Checks
+***** Liveness Probe
+***** Readiness Probe
+***** Startup Probe
+*** Disaster Recovery
+**** Backup
+***** Full Backup
+***** Incremental Backup
+***** Differential Backup
+**** Recovery Point Objective (RPO)
+**** Recovery Time Objective (RTO)
+**** Multi-region Deployment
+**** Chaos Engineering
+***** Chaos Monkey
+***** Fault Injection
+
+** Consistency\nModels
+*** CAP Theorem
+**** Consistency
+***** All Nodes See Same Data
+***** Strong Consistency
+**** Availability
+***** Every Request Gets Response
+***** May Not Be Latest
+**** Partition Tolerance
+***** System Continues Despite Network Partition
+**** Trade-offs
+***** CP Systems
+****** Consistency + Partition Tolerance
+****** MongoDB (configurable)
+****** HBase
+****** Redis Cluster
+***** AP Systems
+****** Availability + Partition Tolerance
+****** Cassandra
+****** DynamoDB
+****** Riak
+***** CA Systems
+****** Consistency + Availability
+****** Traditional RDBMS (single node)
+****** Not Practical in Distributed Systems
+*** Consistency Models
+**** Strong Consistency
+***** Linearizability
+****** Appears Atomic
+****** Total Order
+***** Sequential Consistency
+****** Program Order Preserved
+****** May Not Be Real-time
+**** Weak Consistency
+***** Best Effort
+***** No Guarantees
+**** Eventual Consistency
+***** Converges Over Time
+***** High Availability
+***** BASE Model
+****** Basically Available
+****** Soft State
+****** Eventual Consistency
+***** Conflict Resolution
+****** Last Write Wins (LWW)
+******* Simple
+******* May Lose Updates
+****** Vector Clocks
+******* Track Causality
+******* Detect Conflicts
+****** CRDTs (Conflict-free Replicated Data Types)
+******* Automatically Merge
+******* No Conflicts
+**** Causal Consistency
+***** Causally Related Operations Ordered
+***** Concurrent Operations Unordered
+**** Read-Your-Writes Consistency
+***** See Own Updates
+***** Session Consistency
+**** Monotonic Reads
+***** Never See Older Data
+**** Monotonic Writes
+***** Writes Ordered
+*** Consensus Algorithms
+**** Paxos
+***** Complex Algorithm
+***** Leader-based
+***** Multiple Phases
+**** Raft
+***** Easier to Understand
+***** Leader Election
+****** Term-based
+****** Majority Vote
+***** Log Replication
+****** AppendEntries RPC
+****** Commit Index
+***** Safety Properties
+****** Election Safety
+****** Leader Append-Only
+****** Log Matching
+***** etcd Implementation
+***** Consul Implementation
+**** ZAB (ZooKeeper Atomic Broadcast)
+***** ZooKeeper's Algorithm
+***** Similar to Paxos
+**** Byzantine Fault Tolerance
+***** PBFT
+***** Blockchain Consensus
+****** Proof of Work
+****** Proof of Stake
+*** Distributed Transactions
+**** Two-Phase Commit (2PC)
+***** Prepare Phase
+***** Commit Phase
+***** Coordinator
+***** Participants
+***** Blocking Protocol
+***** Single Point of Failure
+**** Three-Phase Commit (3PC)
+***** CanCommit
+***** PreCommit
+***** DoCommit
+***** Non-blocking
+***** More Complex
+**** Saga Pattern
+***** Long-running Transactions
+***** Compensating Transactions
+***** Choreography
+****** Event-driven
+****** Decentralized
+***** Orchestration
+****** Central Coordinator
+****** Explicit Control
+**** TCC (Try-Confirm-Cancel)
+***** Try Phase (Reserve)
+***** Confirm Phase (Commit)
+***** Cancel Phase (Rollback)
+*** Distributed Coordination
+**** ZooKeeper
+***** Distributed Lock
+***** Leader Election
+***** Configuration Management
+***** Naming Service
+**** etcd
+***** Key-Value Store
+***** Raft-based
+***** Kubernetes Backend
+**** Consul
+***** Service Discovery
+***** Health Checking
+***** KV Store
+*** Distributed Lock
+**** Redis-based
+***** SETNX Command
+***** Redlock Algorithm
+****** Multiple Redis Instances
+****** Majority Agreement
+***** Expiration Handling
+**** ZooKeeper-based
+***** Ephemeral Nodes
+***** Sequential Nodes
+***** Watch Mechanism
+**** Database-based
+***** SELECT FOR UPDATE
+***** Optimistic Locking
+****** Version Number
+****** CAS (Compare-and-Swap)
+*** Distributed ID Generation
+**** Snowflake
+***** Twitter's Solution
+***** 64-bit ID
+****** Timestamp (41 bits)
+****** Machine ID (10 bits)
+****** Sequence (12 bits)
+***** Time-ordered
+***** Roughly Sortable
+**** UUID
+***** Universally Unique
+***** 128-bit
+***** Random-based
+***** Not Sortable
+**** Database Auto-increment
+***** Single Point of Failure
+***** Scalability Issues
+**** Redis INCR
+***** Atomic Operation
+***** Need Persistence
+**** Leaf (Meituan)
+**** UidGenerator (Baidu)
+
+** Data Processing\nPatterns
+*** OLTP (Online Transaction Processing)
+**** High Concurrency
+**** Low Latency
+**** Short Transactions
+**** CRUD Operations
+**** Row-oriented Storage
+**** ACID Guarantees
+**** Examples
+***** E-commerce Orders
+***** Banking Transactions
+***** User Registration
+*** OLAP (Online Analytical Processing)
+**** Complex Queries
+**** Data Aggregation
+**** Long-running Queries
+**** Column-oriented Storage
+**** Read-heavy
+**** Historical Data Analysis
+**** Examples
+***** Business Intelligence
+***** Data Mining
+***** Reporting
+*** HTAP (Hybrid Transactional/Analytical Processing)
+**** TiDB
+**** SingleStore
+*** Stream Processing
+**** Real-time Processing
+**** Continuous Data Flow
+**** Event Time vs Processing Time
+**** Windowing
+***** Tumbling Window
+****** Fixed Size
+****** Non-overlapping
+***** Sliding Window
+****** Fixed Size
+****** Overlapping
+***** Session Window
+****** Gap-based
+****** Variable Size
+**** Watermarks
+***** Handle Late Data
+***** Progress Tracking
+**** Technologies
+***** Apache Kafka Streams
+****** Library
+****** Exactly-once Semantics
+****** Stateful Processing
+***** Apache Flink
+****** True Streaming
+****** Event Time Processing
+****** Savepoints
+****** Low Latency
+***** Apache Storm
+****** Topology-based
+****** At-least-once
+***** Apache Spark Streaming
+****** Micro-batch
+****** DStream
+***** Amazon Kinesis
+*** Batch Processing
+**** Large Data Volumes
+**** Scheduled Jobs
+**** High Throughput
+**** High Latency Acceptable
+**** Technologies
+***** Apache Hadoop
+****** MapReduce
+******* Map Phase
+******* Shuffle Phase
+******* Reduce Phase
+****** HDFS
+******* Distributed File System
+******* Replication
+****** YARN
+******* Resource Manager
+***** Apache Spark
+****** In-memory Processing
+****** RDD (Resilient Distributed Dataset)
+****** DataFrame API
+****** Faster than MapReduce
+***** Apache Hive
+****** SQL on Hadoop
+****** Data Warehouse
+***** Presto
+****** Distributed SQL Query
+****** Interactive Queries
+*** Lambda Architecture
+**** Batch Layer
+***** Historical Data
+***** Complete and Accurate
+**** Speed Layer
+***** Real-time Data
+***** Approximate Results
+**** Serving Layer
+***** Merge Results
+***** Query Interface
+**** Drawbacks
+***** Complexity
+***** Code Duplication
+*** Kappa Architecture
+**** Stream-only Processing
+**** Single Pipeline
+**** Reprocessing via Replay
+**** Simpler than Lambda
+*** ETL (Extract, Transform, Load)
+**** Extract
+***** Data Sources
+**** Transform
+***** Data Cleaning
+***** Data Enrichment
+***** Data Aggregation
+**** Load
+***** Data Warehouse
+***** Data Lake
+*** ELT (Extract, Load, Transform)
+**** Load Raw Data First
+**** Transform in Warehouse
+**** Modern Approach
+
+** Common Design\nProblems
+*** Basic Level
+**** URL Shortener (TinyURL)
+***** Requirements
+****** Shorten URL
+****** Redirect
+****** Custom Alias
+****** Analytics
+***** Design Points
+****** Hash Function
+******* MD5/SHA256
+******* Base62 Encoding
+****** Collision Handling
+******* Check and Retry
+******* Counter-based
+****** Database Schema
+****** Caching Strategy
+****** Scale Estimation
+******* 100M URLs/month
+******* 100:1 Read/Write Ratio
+**** Rate Limiter
+***** Requirements
+****** Limit Requests
+****** Per User/IP/API
+****** Distributed
+***** Algorithms
+****** Token Bucket
+****** Leaky Bucket
+****** Fixed Window
+****** Sliding Window
+***** Implementation
+****** Redis + Lua
+****** API Gateway
+****** Application Level
+***** Scale
+****** Millions of Users
+****** Low Latency
+**** Consistent Hashing
+***** Requirements
+****** Distributed Cache
+****** Minimal Rebalancing
+***** Design
+****** Hash Ring
+****** Virtual Nodes
+****** Replication
+***** Use Cases
+****** CDN
+****** Distributed Cache
+****** Load Balancing
+**** Unique ID Generator
+***** Requirements
+****** Globally Unique
+****** Sortable
+****** 64-bit
+***** Solutions
+****** Snowflake
+****** UUID
+****** Database Sequence
+****** Redis INCR
+**** Distributed Cache
+***** Requirements
+****** High Performance
+****** Scalability
+****** Availability
+***** Design
+****** Sharding
+****** Replication
+****** Eviction Policy
+****** Consistency
+*** Intermediate Level
+**** News Feed System (Twitter/Facebook)
+***** Requirements
+****** Post Updates
+****** View Feed
+****** Follow/Unfollow
+****** Pagination
+***** Design Points
+****** Fanout Strategies
+******* Fanout on Write (Push)
+******** Pre-compute Feeds
+******** Fast Reads
+******** Slow Writes
+******** Storage Overhead
+******* Fanout on Read (Pull)
+******** Compute on Demand
+******** Slow Reads
+******** Fast Writes
+******* Hybrid Approach
+******** Push for Normal Users
+******** Pull for Celebrities
+****** Feed Generation
+******* Timeline Service
+******* Fanout Service
+******* Ranking Algorithm
+****** Data Storage
+******* Post Table
+******* User Table
+******* Follow Graph
+******* Feed Cache (Redis)
+****** Scale
+******* 300M Users
+******* 100M DAU
+******* 10:1 Read/Write
+**** Chat System (WhatsApp/Slack)
+***** Requirements
+****** One-on-One Chat
+****** Group Chat
+****** Online Presence
+****** Message History
+****** Delivered/Read Receipts
+****** Push Notifications
+****** File Sharing
+***** Design Points
+****** Real-time Communication
+******* WebSocket
+******* Long Polling (Fallback)
+****** Message Flow
+******* Client → Gateway → Chat Server → Client
+****** Message Storage
+******* MongoDB (Message History)
+******* Cassandra (Alternative)
+****** Online Presence
+******* Redis (Online Users)
+******* Heartbeat Mechanism
+****** Group Chat
+******* Message Fanout
+******* Member List
+****** Delivery Guarantees
+******* At-least-once
+******* Idempotency
+****** Push Notifications
+******* APNs (iOS)
+******* FCM (Android)
+****** Scalability
+******* Partition by User ID
+******* Message Queue
+****** E2E Encryption
+**** Notification System
+***** Requirements
+****** Push Notifications
+****** Email
+****** SMS
+****** In-app
+***** Design
+****** Notification Service
+****** Template Service
+****** Rate Limiting
+****** Priority Queue
+****** Retry Mechanism
+****** Analytics
+**** Web Crawler
+***** Requirements
+****** Crawl Web Pages
+****** Avoid Duplicates
+****** Respect robots.txt
+****** Distributed
+***** Design
+****** URL Frontier (Queue)
+****** Fetcher
+****** DNS Resolver
+****** Content Parser
+****** Content Storage
+****** URL Deduplication
+******* Bloom Filter
+******* URL Seen Set
+****** Politeness
+******* Delay Between Requests
+******* robots.txt
+****** Freshness
+******* Re-crawl Strategy
+**** Typeahead Suggestion (Autocomplete)
+***** Requirements
+****** Fast Response (<100ms)
+****** Relevant Results
+****** Scalability
+***** Design
+****** Trie Data Structure
+****** Caching
+****** Data Collection
+******* Query Logs
+******* Popularity
+****** Ranking
+****** Real-time Updates
+**** Top K Problem (Trending Topics)
+***** Requirements
+****** Top K Items
+****** Real-time
+****** Heavy Traffic
+***** Design
+****** Count-Min Sketch
+****** Heavy Hitters
+****** Stream Processing
+****** Sliding Window
+****** Distributed Counting
+******* MapReduce
+******* Spark
+*** Advanced Level
+**** Video Streaming Platform (YouTube/Netflix)
+***** Requirements
+****** Upload Video
+****** Stream Video
+****** Recommendations
+****** Comments
+****** Likes/Views
+***** Design Points
+****** Video Upload
+******* Chunked Upload
+******* Resumable Upload
+****** Video Processing
+******* Transcoding
+******** Multiple Resolutions
+******** Different Formats
+******** Distributed Workers
+******* Thumbnail Generation
+******* Metadata Extraction
+****** Video Storage
+******* Object Storage (S3)
+******* CDN Distribution
+****** Video Streaming
+******* Adaptive Bitrate (ABR)
+******** HLS (HTTP Live Streaming)
+******** DASH (Dynamic Adaptive Streaming)
+******* Progressive Download
+****** Recommendation System
+******* Collaborative Filtering
+******* Content-based Filtering
+******* Deep Learning Models
+****** Analytics
+******* View Count
+******* Watch Time
+******* User Behavior
+****** Scale
+******* Petabytes of Videos
+******* Billions of Views
+******* CDN for Global Delivery
+**** Search Engine (Google Simplified)
+***** Requirements
+****** Web Crawling
+****** Indexing
+****** Search Query
+****** Ranking
+***** Design Points
+****** Web Crawler
+******* Distributed Crawlers
+******* URL Frontier
+******* robots.txt
+****** Indexing
+******* Inverted Index
+******** Term → Document List
+******* Forward Index
+******** Document → Terms
+******* Distributed Index
+******** Partition by Term
+******** Partition by Document
+****** Query Processing
+******* Query Parser
+******* Query Expansion
+******* Spell Correction
+****** Ranking
+******* PageRank
+******** Link Analysis
+******** Importance Score
+******* TF-IDF
+******* BM25
+******* Machine Learning Models
+****** Storage
+******* Distributed File System
+******* Index Sharding
+****** Caching
+******* Query Cache
+******* Result Cache
+****** Scale
+******* Billions of Pages
+******* Millions of Queries/sec
+**** Recommendation System (Netflix/Amazon)
+***** Requirements
+****** Personalized Recommendations
+****** Real-time
+****** Scalable
+***** Design Points
+****** Collaborative Filtering
+******* User-based
+******* Item-based
+******* Matrix Factorization
+****** Content-based Filtering
+******* Feature Extraction
+******* Similarity Calculation
+****** Hybrid Approaches
+******* Combine Multiple Models
+****** Deep Learning
+******* Neural Collaborative Filtering
+******* Embedding
+****** Online/Offline Architecture
+******* Offline Training
+******* Online Serving
+******* Feature Store
+****** A/B Testing
+******* Experimentation Platform
+******* Metrics Tracking
+****** Cold Start Problem
+******* New Users
+******* New Items
+******* Solutions
+******** Popular Items
+******** Demographic Info
+******** Contextual Bandits
+****** Evaluation Metrics
+******* Precision/Recall
+******* NDCG
+******* Click-through Rate
+**** Payment System (Stripe/PayPal)
+***** Requirements
+****** Process Payments
+****** Strong Consistency
+****** No Data Loss
+****** Idempotency
+****** Reconciliation
+***** Design Points
+****** Payment Flow
+******* Checkout
+******* Payment Gateway
+******* Payment Service Provider
+******* Bank
+****** Idempotency
+******* Idempotency Key
+******* Prevent Duplicate Charges
+****** Distributed Transaction
+******* Saga Pattern
+******* TCC Pattern
+******* 2PC (Last Resort)
+****** Reconciliation
+******* Daily Reconciliation Job
+******* Compare Internal vs External Records
+******* Handle Discrepancies
+****** Data Consistency
+******* Strong Consistency Required
+******* Double-entry Bookkeeping
+****** Security
+******* PCI DSS Compliance
+******* Encryption
+******* Tokenization
+****** Retry Mechanism
+******* Exponential Backoff
+******* Max Retries
+****** Fraud Detection
+******* Rule Engine
+******* Machine Learning
+******* Real-time Scoring
+****** Scale
+******* Millions of Transactions/day
+******* 99.99% Availability
+******* Financial Accuracy
+**** Ride-sharing System (Uber/Lyft)
+***** Requirements
+****** Request Ride
+****** Match Driver
+****** Real-time Tracking
+****** ETA Calculation
+****** Payment
+****** Rating
+***** Design Points
+****** Geospatial Indexing
+******* Geohash
+******** Grid-based
+******** Nearby Search
+******* QuadTree
+******** Hierarchical
+******** Dynamic Updates
+******* S2 Geometry (Google)
+******** Hilbert Curve
+******** Better Accuracy
+****** Matching Algorithm
+******* Find Nearby Drivers
+******* Optimize for Distance/Time
+******* Consider Driver Rating
+******* Dispatch Service
+****** Real-time Location Updates
+******* WebSocket
+******* Frequent Updates (4s)
+******* Redis for Current Location
+****** ETA Calculation
+******* Route Service
+******* Traffic Data
+******* Historical Data
+******* Google Maps API
+****** Demand-Supply
+******* Surge Pricing
+******* Dynamic Pricing
+******* Heatmaps
+****** Trip Management
+******* State Machine
+******** Requested
+******** Accepted
+******** En Route
+******** In Progress
+******** Completed
+****** Payment
+******* Pre-authorization
+******* Final Charge
+******* Split Payment
+****** Notification
+******* Push Notifications
+******* SMS
+****** Scale
+******* Millions of Rides/day
+******* Real-time Processing
+******* Global Coverage
+**** Ticketing System (Ticketmaster)
+***** Requirements
+****** Browse Events
+****** Book Tickets
+****** Prevent Overselling
+****** Handle High Traffic
+****** Fair Distribution
+***** Design Points
+****** Inventory Management
+******* Pessimistic Locking
+******* Optimistic Locking
+******* Distributed Lock
+****** Queue System
+******* Virtual Waiting Room
+******* FIFO Queue
+******* Token-based
+****** Prevent Scalping
+******* CAPTCHA
+******* Rate Limiting
+******* Identity Verification
+****** Caching
+******* Event Details
+******* Seat Maps
+****** Database Design
+******* Event Table
+******* Seat Table
+******* Booking Table
+******* Sharding by Event
+****** Flash Sale Handling
+******* Pre-warm Cache
+******* Auto-scaling
+******* Circuit Breaker
+****** Scale
+******* Millions of Users
+******* Thousands of Events
+******* High Concurrency
+
+** Infrastructure\nComponents
+*** Load Balancer
+**** Hardware Load Balancer
+***** F5 Networks
+***** Citrix ADC
+**** Software Load Balancer
+***** Nginx
+****** HTTP/HTTPS Load Balancing
+****** Reverse Proxy
+****** SSL Termination
+****** Layer 7
+***** HAProxy
+****** Layer 4 and Layer 7
+****** High Performance
+****** TCP Load Balancing
+***** LVS (Linux Virtual Server)
+****** Layer 4
+****** Kernel-level
+****** High Performance
+***** Envoy
+****** Modern Proxy
+****** Service Mesh
+****** gRPC Support
+**** Cloud Load Balancer
+***** AWS ELB
+****** ALB (Application)
+****** NLB (Network)
+****** CLB (Classic)
+***** Google Cloud Load Balancing
+***** Azure Load Balancer
+**** Algorithms
+***** Round Robin
+***** Weighted Round Robin
+***** Least Connections
+***** IP Hash
+***** Consistent Hashing
+**** Features
+***** Health Checks
+****** Active Health Check
+****** Passive Health Check
+***** Session Persistence (Sticky Sessions)
+***** SSL/TLS Termination
+***** Connection Pooling
+*** Reverse Proxy
+**** Nginx
+**** Apache HTTP Server
+**** Varnish
+***** HTTP Accelerator
+***** Caching Proxy
+*** API Gateway
+**** Kong
+***** Open Source
+***** Plugin Architecture
+***** OAuth2, JWT
+**** Spring Cloud Gateway
+***** Java-based
+***** Spring Ecosystem
+**** AWS API Gateway
+**** Apigee (Google)
+**** Azure API Management
+**** Features
+***** Authentication & Authorization
+***** Rate Limiting
+***** Request/Response Transformation
+***** Protocol Translation
+***** API Versioning
+***** Analytics
+***** Caching
+*** Service Discovery
+**** Consul
+***** HashiCorp
+***** Health Checking
+***** KV Store
+***** Multi-datacenter
+**** Eureka
+***** Netflix OSS
+***** Spring Cloud Integration
+***** Client-side Discovery
+**** Nacos
+***** Alibaba
+***** Service Discovery + Config
+***** Chinese Documentation
+**** etcd
+***** CoreOS
+***** Raft-based
+***** Kubernetes Backend
+**** ZooKeeper
+***** Apache
+***** Coordination Service
+***** Distributed Lock
+**** Patterns
+***** Client-side Discovery
+****** Client Queries Registry
+***** Server-side Discovery
+****** Load Balancer Queries Registry
+*** Configuration Management
+**** Apollo (Ctrip)
+***** Distributed Config Center
+***** Real-time Updates
+***** Audit Trail
+**** Nacos
+**** Spring Cloud Config
+**** Consul
+**** etcd
+**** Features
+***** Centralized Configuration
+***** Environment-specific Configs
+***** Dynamic Updates
+***** Version Control
+***** Rollback Support
+*** Container Technologies
+**** Docker
+***** Container Runtime
+***** Images
+***** Dockerfile
+***** Docker Compose
+**** Containerd
+***** Industry Standard Runtime
+***** CNCF Project
+**** Podman
+***** Daemonless
+***** Rootless Containers
+*** Container Orchestration
+**** Kubernetes (K8s)
+***** Core Concepts
+****** Pod
+******* Smallest Deployable Unit
+******* One or More Containers
+****** Service
+******* Stable Network Endpoint
+******* Load Balancing
+******* ClusterIP, NodePort, LoadBalancer
+****** Deployment
+******* Declarative Updates
+******* Rolling Updates
+******* Rollback
+****** StatefulSet
+******* Stateful Applications
+******* Stable Network Identity
+******* Persistent Storage
+****** DaemonSet
+******* One Pod per Node
+******* System Daemons
+****** Job / CronJob
+******* Batch Processing
+******* Scheduled Tasks
+****** ConfigMap
+******* Configuration Data
+****** Secret
+******* Sensitive Data
+******* Base64 Encoded
+****** PersistentVolume (PV)
+****** PersistentVolumeClaim (PVC)
+****** Ingress
+******* HTTP/HTTPS Routing
+******* External Access
+****** Namespace
+******* Virtual Clusters
+******* Resource Isolation
+***** Control Plane
+****** API Server
+****** etcd
+****** Scheduler
+****** Controller Manager
+***** Node Components
+****** Kubelet
+****** Kube-proxy
+****** Container Runtime
+***** Networking
+****** CNI (Container Network Interface)
+******* Calico
+******* Flannel
+******* Weave
+******* Cilium
+***** Storage
+****** CSI (Container Storage Interface)
+***** Auto-scaling
+****** Horizontal Pod Autoscaler (HPA)
+******* CPU/Memory-based
+******* Custom Metrics
+****** Vertical Pod Autoscaler (VPA)
+****** Cluster Autoscaler
+***** Service Mesh
+****** Istio
+******* Traffic Management
+******* Security
+******* Observability
+****** Linkerd
+******* Lightweight
+******* Simple
+****** Consul Connect
+**** Docker Swarm
+***** Docker's Native Orchestration
+***** Simpler than K8s
+**** Apache Mesos
+***** Datacenter OS
+***** Marathon Framework
+*** Object Storage
+**** Amazon S3
+***** Buckets
+***** Objects
+***** Versioning
+***** Lifecycle Policies
+***** S3 Standard
+***** S3 IA (Infrequent Access)
+***** S3 Glacier
+**** Google Cloud Storage
+**** Azure Blob Storage
+**** MinIO
+***** Self-hosted
+***** S3-compatible
+***** High Performance
+**** Ceph
+***** Distributed Storage
+***** Object, Block, File
+**** OpenStack Swift
+*** CDN (Content Delivery Network)
+**** CloudFlare
+***** DDoS Protection
+***** Web Application Firewall
+***** Global Network
+**** Akamai
+***** Largest CDN
+***** Enterprise
+**** AWS CloudFront
+***** Integrated with AWS
+**** Fastly
+***** Edge Computing
+***** Real-time Purging
+**** Features
+***** Edge Caching
+***** SSL/TLS
+***** Compression
+***** Image Optimization
+***** Geo-routing
+*** Message Queue
+**** See Communication Patterns section
+*** Workflow Orchestration
+**** Apache Airflow
+***** DAG-based
+***** Python
+***** Scheduling
+**** Temporal
+***** Uber's Solution
+***** Workflow Engine
+***** Durable Execution
+**** Cadence
+***** Uber
+***** Predecessor to Temporal
+**** AWS Step Functions
+***** Serverless Workflow
+*** API Management
+**** Swagger/OpenAPI
+***** API Documentation
+***** Code Generation
+**** Postman
+***** API Development
+***** Testing
+***** Mock Servers
+**** GraphQL
+***** Query Language
+***** Schema-based
+
+** Security\nConsiderations
+*** Authentication
+**** Session-based Authentication
+***** Server-side Sessions
+***** Session ID in Cookie
+***** Stateful
+**** Token-based Authentication
+***** JWT (JSON Web Token)
+****** Header, Payload, Signature
+****** Stateless
+****** Self-contained
+****** Expiration
+***** OAuth 2.0
+****** Authorization Framework
+****** Third-party Access
+****** Grant Types
+******* Authorization Code
+******* Implicit
+******* Client Credentials
+******* Resource Owner Password
+***** OpenID Connect
+****** Authentication Layer on OAuth 2.0
+****** ID Token
+**** API Key Authentication
+***** Simple
+***** API Key in Header
+**** Multi-factor Authentication (MFA)
+***** Something You Know (Password)
+***** Something You Have (Phone)
+***** Something You Are (Biometric)
+**** Single Sign-On (SSO)
+***** SAML
+***** CAS
+***** OAuth/OIDC
+**** Biometric Authentication
+*** Authorization
+**** RBAC (Role-Based Access Control)
+***** Roles
+***** Permissions
+***** User-Role Assignment
+**** ABAC (Attribute-Based Access Control)
+***** Policy-based
+***** Contextual
+***** Fine-grained
+**** ACL (Access Control List)
+***** Resource-based
+***** Simple
+**** Policy-based Authorization
+***** Open Policy Agent (OPA)
+*** Encryption
+**** At Rest
+***** Database Encryption
+****** TDE (Transparent Data Encryption)
+***** Disk Encryption
+***** File Encryption
+**** In Transit
+***** TLS/SSL
+****** HTTPS
+****** Certificate Authority
+****** Public Key Infrastructure
+***** VPN
+***** IPSec
+**** End-to-End Encryption
+***** Client Encryption
+***** Zero-knowledge
+**** Key Management
+***** AWS KMS
+***** HashiCorp Vault
+***** Azure Key Vault
+*** Common Vulnerabilities
+**** SQL Injection
+***** Parameterized Queries
+***** ORM
+***** Input Validation
+**** XSS (Cross-Site Scripting)
+***** Output Encoding
+***** Content Security Policy
+***** Sanitization
+**** CSRF (Cross-Site Request Forgery)
+***** CSRF Tokens
+***** SameSite Cookies
+**** DDoS (Distributed Denial of Service)
+***** Rate Limiting
+***** CDN
+***** Web Application Firewall
+**** Man-in-the-Middle
+***** TLS/SSL
+***** Certificate Pinning
+**** Injection Attacks
+***** Input Validation
+***** Whitelisting
+*** Security Best Practices
+**** Principle of Least Privilege
+**** Defense in Depth
+**** Security by Design
+**** Regular Security Audits
+**** Penetration Testing
+**** Security Monitoring
+**** Incident Response Plan
+**** Data Privacy
+***** GDPR
+***** CCPA
+***** Data Anonymization
+
+** Performance\nOptimization
+*** Database Optimization
+**** Query Optimization
+***** Index Usage
+***** Query Plan Analysis
+***** Avoid N+1 Queries
+***** Batch Queries
+**** Index Optimization
+***** Composite Indexes
+***** Covering Indexes
+***** Index Selectivity
+**** Connection Pooling
+***** Reuse Connections
+***** HikariCP
+***** c3p0
+**** Denormalization
+***** Trade-off
+***** Reduce Joins
+**** Partitioning
+***** Range Partitioning
+***** List Partitioning
+***** Hash Partitioning
+**** Read Replicas
+***** Offload Read Traffic
+**** Materialized Views
+***** Pre-computed Results
+*** Application Optimization
+**** Code Profiling
+***** Identify Bottlenecks
+***** CPU Profiling
+***** Memory Profiling
+**** Memory Management
+***** Garbage Collection Tuning
+***** Object Pooling
+***** Memory Leaks Prevention
+**** Concurrency
+***** Thread Pools
+***** Async Processing
+***** Non-blocking I/O
+**** Algorithm Optimization
+***** Time Complexity
+***** Space Complexity
+**** Lazy Loading
+***** Load on Demand
+**** Eager Loading
+***** Prevent N+1
+*** Network Optimization
+**** Compression
+***** Gzip
+****** Text Compression
+***** Brotli
+****** Better Compression
+***** Response Compression
+**** Connection Management
+***** Keep-Alive
+***** Connection Pooling
+**** Protocol Optimization
+***** HTTP/2
+****** Multiplexing
+****** Server Push
+****** Header Compression
+***** HTTP/3 (QUIC)
+****** UDP-based
+****** Reduced Latency
+**** Minimize Payload
+***** JSON Minification
+***** Remove Unused Fields
+**** CDN Usage
+***** Reduce Latency
+***** Offload Origin
+*** Frontend Optimization
+**** Code Splitting
+***** Lazy Load Modules
+**** Minification
+***** JavaScript
+***** CSS
+**** Image Optimization
+***** Compression
+***** WebP Format
+***** Lazy Loading
+***** Responsive Images
+**** Browser Caching
+***** Cache-Control Headers
+**** Resource Bundling
+***** Reduce HTTP Requests
+*** Resource Optimization
+**** CPU Optimization
+***** Reduce Computation
+***** Caching Results
+**** Memory Optimization
+***** Reduce Memory Footprint
+***** Garbage Collection
+**** I/O Optimization
+***** Reduce Disk I/O
+***** Buffering
+**** Cost Optimization
+***** Right-sizing Instances
+***** Reserved Instances
+***** Spot Instances
+***** Auto-scaling
+
+@endmindmap

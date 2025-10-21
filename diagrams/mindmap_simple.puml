@@ -1,0 +1,198 @@
+@startmindmap
+
+title System Design Complete Mind Map
+
+* System Design
+
+left side
+
+** Architecture\nPatterns
+*** Monolithic
+*** Microservices
+**** Service Discovery
+**** API Gateway
+**** Service Mesh
+*** Event-Driven
+**** Event Sourcing
+**** CQRS
+*** Serverless
+**** FaaS
+**** BaaS
+
+** Communication\nPatterns
+*** Synchronous
+**** REST
+**** gRPC
+**** GraphQL
+*** Asynchronous
+**** Message Queue
+***** RabbitMQ
+***** Kafka
+***** RocketMQ
+*** Streaming
+**** WebSocket
+**** SSE
+**** gRPC Stream
+
+** Data Storage
+*** SQL Database
+**** MySQL
+**** PostgreSQL
+**** Scaling
+***** Replication
+****** Master-Slave
+****** Master-Master
+***** Sharding
+****** Horizontal
+****** Vertical
+****** Hash-based
+****** Range-based
+*** NoSQL
+**** Key-Value
+***** Redis
+***** Memcached
+**** Document
+***** MongoDB
+**** Column-Family
+***** Cassandra
+***** HBase
+**** Graph
+***** Neo4j
+**** Time-Series
+***** InfluxDB
+*** NewSQL
+**** TiDB
+**** CockroachDB
+
+** Caching
+*** Strategies
+**** Cache Aside
+**** Read Through
+**** Write Through
+**** Write Behind
+*** Levels
+**** Browser Cache
+**** CDN
+**** Application Cache
+**** Database Cache
+*** Problems
+**** Cache Penetration
+**** Cache Breakdown
+**** Cache Avalanche
+*** Eviction
+**** LRU
+**** LFU
+**** TTL
+
+right side
+
+** Scalability
+*** Vertical Scaling
+**** Scale Up
+*** Horizontal Scaling
+**** Scale Out
+**** Load Balancing
+***** Round Robin
+***** Least Connection
+***** Consistent Hashing
+*** Partitioning
+**** Data Sharding
+**** Functional Decomposition
+
+** Reliability
+*** Redundancy
+**** Active-Active
+**** Active-Passive
+*** Fault Tolerance
+**** Circuit Breaker
+**** Retry
+**** Timeout
+**** Bulkhead
+*** Degradation
+**** Graceful Degradation
+**** Feature Toggle
+*** Rate Limiting
+**** Token Bucket
+**** Leaky Bucket
+**** Sliding Window
+
+** Consistency
+*** CAP Theorem
+**** Consistency
+**** Availability
+**** Partition Tolerance
+*** Models
+**** Strong Consistency
+**** Eventual Consistency
+**** Causal Consistency
+*** Consensus
+**** Paxos
+**** Raft
+**** ZAB
+*** Distributed Transaction
+**** 2PC
+**** 3PC
+**** Saga
+
+** Data Processing
+*** OLTP
+**** High Concurrency
+**** Low Latency
+*** OLAP
+**** Analytics
+**** Data Warehouse
+*** Stream Processing
+**** Kafka Streams
+**** Flink
+**** Storm
+*** Batch Processing
+**** Hadoop
+**** Spark
+**** MapReduce
+
+** Design Problems
+*** Basic
+**** URL Shortener
+**** Rate Limiter
+**** Consistent Hashing
+*** Intermediate
+**** News Feed
+**** Chat System
+**** Notification System
+**** Web Crawler
+*** Advanced
+**** Video Streaming
+**** Search Engine
+**** Recommendation
+**** Payment System
+**** Ride-sharing
+
+** Infrastructure
+*** Load Balancer
+**** Layer 4
+***** LVS
+***** HAProxy
+**** Layer 7
+***** Nginx
+***** Envoy
+*** API Gateway
+**** Kong
+**** Spring Cloud Gateway
+*** Service Discovery
+**** Consul
+**** Eureka
+**** Nacos
+*** Orchestration
+**** Kubernetes
+**** Docker Swarm
+*** Monitoring
+**** Metrics
+***** Prometheus
+***** Grafana
+**** Logging
+***** ELK Stack
+**** Tracing
+***** Zipkin
+***** Jaeger
+
+@endmindmap

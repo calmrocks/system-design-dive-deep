@@ -1,0 +1,640 @@
+@startmindmap
+
+title System Design Learning Path (4 Stages)
+
+* System Design\nLearning Path
+
+left side
+
+** Stage 1: Foundation\n(Month 1-3)
+
+*** Computer Networks
+**** TCP/IP
+***** 3-Way Handshake
+***** Flow Control
+**** HTTP/HTTPS
+***** Request/Response
+***** Status Codes
+***** Headers
+**** DNS
+***** DNS Resolution
+***** DNS Records
+**** WebSocket
+***** Full-duplex
+***** Persistent Connection
+
+*** Database Basics
+**** SQL Fundamentals
+***** CRUD Operations
+***** JOIN Operations
+***** Aggregation
+***** Subqueries
+**** Relational DB
+***** MySQL
+***** PostgreSQL
+**** Indexing
+***** B-Tree
+***** B+ Tree
+***** When to Index
+**** Transactions
+***** ACID
+****** Atomicity
+****** Consistency
+****** Isolation
+****** Durability
+***** Isolation Levels
+****** Read Uncommitted
+****** Read Committed
+****** Repeatable Read
+****** Serializable
+
+*** Programming Basics
+**** Data Structures
+***** Hash Table
+***** Tree (BST, Balanced)
+***** Heap
+***** Graph
+**** Algorithms
+***** Sorting (Quick, Merge)
+***** Searching (Binary Search)
+***** Time Complexity (Big O)
+**** Design Patterns
+***** Singleton
+***** Factory
+***** Observer
+***** Strategy
+**** OOP Principles
+***** Encapsulation
+***** Inheritance
+***** Polymorphism
+
+*** Web Development
+**** MVC Architecture
+**** RESTful API
+***** Resource-based URLs
+***** HTTP Methods
+***** JSON Response
+**** Authentication
+***** Session-based
+***** JWT
+***** OAuth 2.0
+**** Frontend-Backend Separation
+
+*** First Project
+**** Todo List API
+***** User Auth
+***** CRUD Operations
+***** MySQL Database
+***** Docker Deployment
+
+** Stage 2: Core Concepts\n(Month 4-6)
+
+*** Caching
+**** Cache Strategies
+***** Cache Aside
+***** Read/Write Through
+***** Write Behind
+**** Distributed Cache
+***** Redis
+****** Data Structures
+****** Persistence (RDB/AOF)
+****** Replication
+****** Cluster
+***** Memcached
+**** Cache Problems
+***** Cache Penetration
+****** Bloom Filter
+****** Cache Null Values
+***** Cache Breakdown
+****** Mutex Lock
+****** Never Expire Hot Keys
+***** Cache Avalanche
+****** Random TTL
+****** Multi-level Cache
+**** Cache Consistency
+***** Delete after Update
+***** Delayed Double Delete
+***** Binlog Subscription
+
+*** Database Scaling
+**** Replication
+***** Master-Slave
+***** Master-Master
+***** Replication Lag
+**** Read-Write Splitting
+**** Sharding
+***** Range-based
+***** Hash-based
+***** Consistent Hashing
+****** Virtual Nodes
+***** Cross-shard Queries
+**** Distributed Transactions
+***** 2PC
+***** Saga Pattern
+****** Choreography
+****** Orchestration
+
+*** Message Queue
+**** Why MQ?
+***** Async Processing
+***** Decoupling
+***** Peak Shaving
+**** Kafka
+***** Architecture
+****** Producer
+****** Broker/Topic/Partition
+****** Consumer Group
+***** High Throughput
+***** Ordering Guarantee
+***** Delivery Semantics
+****** At-most-once
+****** At-least-once
+****** Exactly-once
+**** RabbitMQ
+***** AMQP Protocol
+***** Exchange Types
+****** Direct
+****** Topic
+****** Fanout
+***** Queue Features
+****** Durable
+****** Dead Letter Queue
+**** Kafka vs RabbitMQ
+
+*** Load Balancing
+**** Algorithms
+***** Round Robin
+***** Least Connections
+***** IP Hash
+***** Consistent Hashing
+**** Layer 4 vs Layer 7
+***** L4: TCP/UDP (LVS, HAProxy)
+***** L7: HTTP (Nginx, ALB)
+**** Health Checks
+**** Session Persistence
+
+*** Microservices
+**** Service Decomposition
+***** By Business Capability
+***** Domain-Driven Design
+**** Communication
+***** Sync (REST, gRPC)
+***** Async (Message Queue)
+**** Service Discovery
+***** Consul
+***** Eureka
+***** Nacos
+**** API Gateway
+***** Routing
+***** Authentication
+***** Rate Limiting
+**** Distributed Tracing
+***** Zipkin
+***** Jaeger
+***** Trace & Span
+**** Circuit Breaker
+***** Hystrix
+***** Resilience4j
+***** Sentinel
+**** Configuration Management
+
+*** Second Project
+**** E-commerce Microservices
+***** Services
+****** User Service
+****** Product Service
+****** Order Service
+****** Payment Service
+****** Inventory Service
+***** Technologies
+****** Service Discovery
+****** API Gateway
+****** Message Queue
+****** Redis Cache
+****** Distributed Tracing
+
+right side
+
+** Stage 3: Advanced Topics\n(Month 7-9)
+
+*** Distributed Systems Theory
+**** CAP Theorem
+***** Consistency
+***** Availability
+***** Partition Tolerance
+***** Trade-offs
+****** CP Systems (MongoDB, Redis)
+****** AP Systems (Cassandra, DynamoDB)
+**** BASE Model
+***** Basically Available
+***** Soft State
+***** Eventual Consistency
+**** Consistency Models
+***** Strong Consistency
+****** Linearizability
+****** Sequential Consistency
+***** Eventual Consistency
+****** Last Write Wins
+****** Vector Clocks
+****** CRDTs
+***** Causal Consistency
+***** Read-Your-Writes
+**** Consensus Algorithms
+***** Paxos
+****** Complex
+****** Multi-phase
+***** Raft
+****** Leader Election
+****** Log Replication
+****** Easier to Understand
+***** ZAB (ZooKeeper)
+
+*** Distributed Coordination
+**** ZooKeeper
+***** Distributed Lock
+***** Leader Election
+***** Configuration Management
+***** ZNodes (Persistent/Ephemeral)
+**** etcd
+***** Raft-based
+***** Key-Value Store
+***** Kubernetes Backend
+**** Consul
+***** Service Discovery
+***** Health Checking
+
+*** Distributed Lock
+**** Redis-based
+***** SETNX
+***** Redlock Algorithm
+**** ZooKeeper-based
+***** Ephemeral Sequential Node
+**** Considerations
+***** Fencing Tokens
+***** Lock Expiration
+
+*** Distributed ID Generation
+**** UUID
+***** Random, Not Sortable
+**** Snowflake
+***** 64-bit
+***** Timestamp + Machine ID + Sequence
+***** Time-ordered
+**** Database Auto-increment
+**** Redis INCR
+
+*** Data Processing
+**** OLTP vs OLAP
+***** OLTP
+****** High Concurrency
+****** Low Latency
+****** Row-oriented
+***** OLAP
+****** Complex Queries
+****** Column-oriented
+****** Data Warehouse
+**** Stream Processing
+***** Concepts
+****** Event Time vs Processing Time
+****** Windowing
+******* Tumbling
+******* Sliding
+******* Session
+****** Watermarks
+***** Technologies
+****** Kafka Streams
+****** Apache Flink
+****** Apache Storm
+****** Spark Streaming
+**** Batch Processing
+***** Hadoop MapReduce
+****** Map, Shuffle, Reduce
+****** HDFS
+****** YARN
+***** Apache Spark
+****** RDD
+****** In-memory
+****** 10-100x Faster
+***** Apache Hive
+****** SQL on Hadoop
+**** Lambda Architecture
+***** Batch Layer
+***** Speed Layer
+***** Serving Layer
+**** Kappa Architecture
+***** Stream-only
+
+*** NoSQL Databases
+**** Key-Value
+***** Redis
+***** DynamoDB
+**** Document
+***** MongoDB
+****** Flexible Schema
+****** Sharding
+****** Replica Sets
+**** Column-Family
+***** Cassandra
+****** Wide-column
+****** Tunable Consistency
+****** No SPOF
+***** HBase
+**** Graph
+***** Neo4j
+****** Nodes & Edges
+****** Cypher Query
+**** Time-Series
+***** InfluxDB
+***** Prometheus
+
+*** NewSQL
+**** TiDB
+***** Distributed SQL
+***** MySQL Compatible
+***** Horizontal Scaling
+**** CockroachDB
+***** PostgreSQL Compatible
+***** Global Distribution
+**** Google Spanner
+***** Global Consistency
+***** TrueTime API
+
+** Stage 4: System Design Practice\n(Month 10-12)
+
+*** Basic Problems
+**** URL Shortener
+***** Requirements
+****** Shorten URL
+****** Redirect
+****** Analytics
+***** Design
+****** Hash Function (Base62)
+****** Database Schema
+****** Cache Strategy
+****** Scale Estimation
+**** Rate Limiter
+***** Algorithms
+****** Token Bucket
+****** Leaky Bucket
+****** Sliding Window
+***** Implementation
+****** Redis + Lua
+****** Distributed
+**** Consistent Hashing
+***** Hash Ring
+***** Virtual Nodes
+***** Use Cases
+****** CDN
+****** Distributed Cache
+**** Unique ID Generator
+***** Snowflake
+***** UUID
+***** Comparison
+**** Distributed Cache
+***** Sharding
+***** Replication
+***** Eviction Policy
+
+*** Intermediate Problems
+**** News Feed System
+***** Requirements
+****** Post Updates
+****** View Feed
+****** Follow/Unfollow
+***** Design
+****** Fanout Strategies
+******* Push (Fanout on Write)
+******* Pull (Fanout on Read)
+******* Hybrid
+****** Timeline Service
+****** Ranking Algorithm
+****** Storage
+******* Post Table
+******* Follow Graph
+******* Feed Cache
+***** Scale
+****** 100M DAU
+****** 10:1 Read/Write
+**** Chat System
+***** Requirements
+****** One-on-One Chat
+****** Group Chat
+****** Online Presence
+****** Message History
+****** Read Receipts
+***** Design
+****** WebSocket
+****** Message Flow
+****** Message Storage (MongoDB)
+****** Online Presence (Redis)
+****** Group Chat Fanout
+****** Push Notifications
+***** Scale
+****** Millions of Users
+****** Real-time
+**** Notification System
+***** Push Notifications
+***** Email
+***** SMS
+***** Priority Queue
+***** Rate Limiting
+**** Web Crawler
+***** URL Frontier
+***** Fetcher
+***** Content Parser
+***** URL Deduplication
+****** Bloom Filter
+***** Politeness
+****** robots.txt
+****** Rate Limiting
+**** Typeahead Suggestion
+***** Trie Data Structure
+***** Caching
+***** Ranking
+***** Real-time Updates
+
+*** Advanced Problems
+**** Video Streaming
+***** Requirements
+****** Upload Video
+****** Stream Video
+****** Recommendations
+***** Design
+****** Video Upload
+******* Chunked Upload
+****** Video Processing
+******* Transcoding
+******* Multiple Resolutions
+****** Storage
+******* Object Storage (S3)
+******* CDN Distribution
+****** Streaming Protocol
+******* HLS
+******* DASH
+******* Adaptive Bitrate
+****** Recommendation System
+***** Scale
+****** Petabytes Storage
+****** Global CDN
+**** Search Engine
+***** Requirements
+****** Web Crawling
+****** Indexing
+****** Search Query
+****** Ranking
+***** Design
+****** Web Crawler
+****** Inverted Index
+****** Query Processing
+****** Ranking
+******* PageRank
+******* TF-IDF
+******* ML Models
+****** Distributed Index
+****** Query Cache
+***** Scale
+****** Billions of Pages
+****** Millions of Queries/sec
+**** Recommendation System
+***** Collaborative Filtering
+****** User-based
+****** Item-based
+***** Content-based Filtering
+***** Hybrid Approach
+***** Deep Learning
+***** Online/Offline Architecture
+***** A/B Testing
+***** Cold Start Problem
+**** Payment System
+***** Requirements
+****** Strong Consistency
+****** No Data Loss
+****** Idempotency
+***** Design
+****** Payment Flow
+****** Idempotency Key
+****** Distributed Transaction
+******* Saga Pattern
+****** Reconciliation
+******* Double-entry Bookkeeping
+****** Security
+******* PCI DSS
+******* Encryption
+****** Fraud Detection
+***** Scale
+****** 99.99% Availability
+****** Financial Accuracy
+**** Ride-sharing System
+***** Requirements
+****** Request Ride
+****** Match Driver
+****** Real-time Tracking
+****** ETA Calculation
+***** Design
+****** Geospatial Indexing
+******* Geohash
+******* QuadTree
+******* S2 Geometry
+****** Matching Algorithm
+****** Real-time Location Updates
+******* WebSocket
+******* Redis
+****** ETA Calculation
+******* Route Service
+******* Traffic Data
+****** Surge Pricing
+****** Trip State Machine
+***** Scale
+****** Millions of Rides/day
+****** Real-time Processing
+****** Global Coverage
+
+*** Infrastructure Knowledge
+**** Container & Orchestration
+***** Docker
+****** Images
+****** Containers
+***** Kubernetes
+****** Pod
+****** Service
+****** Deployment
+****** Ingress
+****** ConfigMap/Secret
+****** Auto-scaling (HPA)
+**** Monitoring & Observability
+***** Metrics
+****** Prometheus
+****** Grafana
+***** Logging
+****** ELK Stack
+****** Fluentd
+***** Tracing
+****** Zipkin
+****** Jaeger
+***** Alerting
+**** Cloud Services
+***** AWS
+****** EC2, S3, RDS
+****** Lambda
+****** ELB, CloudFront
+***** GCP
+***** Azure
+**** Security
+***** Authentication
+****** OAuth 2.0
+****** JWT
+***** Authorization
+****** RBAC
+****** ABAC
+***** Encryption
+****** TLS/SSL
+****** At-rest/In-transit
+***** Common Vulnerabilities
+****** SQL Injection
+****** XSS
+****** CSRF
+****** DDoS
+
+*** Interview Preparation
+**** Design Framework
+***** Requirements Clarification
+****** Functional Requirements
+****** Non-functional Requirements
+****** Scale Estimation
+***** API Design
+****** RESTful Endpoints
+****** Request/Response Format
+***** Data Model
+****** Database Schema
+****** SQL vs NoSQL
+***** High-level Design
+****** Architecture Diagram
+****** Component Interaction
+***** Deep Dive
+****** Specific Component
+****** Optimization
+***** Bottlenecks & Trade-offs
+****** Identify Issues
+****** Propose Solutions
+**** Mock Interviews
+***** Practice with Peers
+***** 45-minute Time Limit
+***** White-boarding
+***** Explain Trade-offs
+**** Study Resources
+***** Books
+****** Designing Data-Intensive Applications
+****** System Design Interview Vol 1 & 2
+***** Courses
+****** MIT 6.824
+****** Grokking System Design
+***** Blogs
+****** Engineering Blogs
+******* Netflix, Uber, Airbnb
+******* Meta, Google, Amazon
+***** Papers
+****** GFS, MapReduce
+****** Bigtable, Dynamo
+****** Kafka, Spanner
+
+@endmindmap
