@@ -8,6 +8,5 @@ node_modules/
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 
-# Keep output folder but ignore its contents initially
-# Remove this line if you want to commit PDFs
-# output/
+# Local test output (GitHub Action generates its own)
+output/

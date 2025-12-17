@@ -50,7 +50,7 @@ jobs:
               -V colorlinks=true \
               -V linkcolor=blue \
               -V urlcolor=blue \
-              --highlight-style=github \
+              --highlight-style=tango \
               -F mermaid-filter \
               --standalone \
               2>/dev/null || echo "Failed to convert $file (continuing...)"

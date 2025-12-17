@@ -34,7 +34,7 @@ echo "📁 Creating output directory..."
 mkdir -p output
 
 # Convert a single test file first
-TEST_FILE="SystemDesign/SystemDesign/README.md"
+TEST_FILE="SystemDesign/SystemDesign/Design/Stage1.md"
 if [ -f "$TEST_FILE" ]; then
     echo "🧪 Testing with $TEST_FILE..."
     pandoc "$TEST_FILE" \
@@ -42,7 +42,7 @@ if [ -f "$TEST_FILE" ]; then
       $PDF_ENGINE \
       -V geometry:margin=1in \
       -V colorlinks=true \
-      --highlight-style=github \
+      --highlight-style=tango \
       --standalone
     
     if [ $? -eq 0 ]; then
@@ -64,7 +64,7 @@ if [ -f "$TEST_FILE" ]; then
               $PDF_ENGINE \
               -V geometry:margin=1in \
               -V colorlinks=true \
-              --highlight-style=github \
+              --highlight-style=tango \
               --standalone \
               2>/dev/null || echo "  ⚠️  Failed: $file"
         done
