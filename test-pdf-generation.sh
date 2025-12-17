@@ -1,14 +1,32 @@
 #!/bin/bash
 
-# Test script for PDF generation
+# Test script for PDF generation using Pandoc
 # Run this locally to test before pushing to GitHub
 
-echo "🔍 Testing PDF generation locally..."
+# Change to the script's directory (system-design-dive-deep)
+cd "$(dirname "$0")"
 
-# Check if md-to-pdf is installed
-if ! command -v md-to-pdf &> /dev/null; then
-    echo "📦 Installing md-to-pdf..."
-    npm install -g md-to-pdf
+echo "🔍 Testing PDF generation locally with Pandoc..."
+echo "📂 Working directory: $(pwd)"
+
+# Check if pandoc is installed
+if ! command -v pandoc &> /dev/null; then
+    echo "❌ Pandoc not found. Install it first:"
+    echo "   macOS: brew install pandoc"
+    echo "   Ubuntu: sudo apt-get install pandoc"
+    exit 1
+fi
+
+# Check for PDF engine
+if ! command -v xelatex &> /dev/null; then
+    echo "⚠️  XeLaTeX not found. Install for best results:"
+    echo "   macOS: brew install --cask mactex-no-gui"
+    echo "   Ubuntu: sudo apt-get install texlive-xetex"
+    echo ""
+    echo "Trying with default PDF engine..."
+    PDF_ENGINE=""
+else
+    PDF_ENGINE="--pdf-engine=xelatex"
 fi
 
 # Create output directory
@@ -19,9 +37,13 @@ mkdir -p output
 TEST_FILE="SystemDesign/SystemDesign/README.md"
 if [ -f "$TEST_FILE" ]; then
     echo "🧪 Testing with $TEST_FILE..."
-    md-to-pdf "$TEST_FILE" \
-      --config-file .github/md-to-pdf-config.json \
-      --dest "output/test-README.pdf"
+    pandoc "$TEST_FILE" \
+      -o "output/test-README.pdf" \
+      $PDF_ENGINE \
+      -V geometry:margin=1in \
+      -V colorlinks=true \
+      --highlight-style=github \
+      --standalone
     
     if [ $? -eq 0 ]; then
         echo "✅ Test conversion successful! Check output/test-README.pdf"
@@ -37,9 +59,14 @@ if [ -f "$TEST_FILE" ]; then
             mkdir -p "output/$dir_path"
             
             echo "  Converting: $file"
-            md-to-pdf "$file" \
-              --config-file .github/md-to-pdf-config.json \
-              --dest "output/$dir_path/$filename.pdf" 2>/dev/null || echo "  ⚠️  Failed: $file"
+            pandoc "$file" \
+              -o "output/$dir_path/$filename.pdf" \
+              $PDF_ENGINE \
+              -V geometry:margin=1in \
+              -V colorlinks=true \
+              --highlight-style=github \
+              --standalone \
+              2>/dev/null || echo "  ⚠️  Failed: $file"
         done
         
         echo ""
@@ -51,4 +78,6 @@ if [ -f "$TEST_FILE" ]; then
     fi
 else
     echo "❌ Test file not found: $TEST_FILE"
+    echo "   Looking for markdown files..."
+    find SystemDesign -name "*.md" -type f | head -5
 fi

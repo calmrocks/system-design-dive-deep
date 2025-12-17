@@ -2,33 +2,34 @@ name: Convert Markdown to PDF
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
     paths:
-      - 'SystemDesign/SystemDesign/**/*.md'
+      - "SystemDesign/SystemDesign/**/*.md"
   workflow_dispatch:
 
 jobs:
   convert-to-pdf:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      
-      - name: Install md-to-pdf
-        run: npm install -g md-to-pdf
-      
+
+      - name: Install Pandoc and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-fonts-extra
+
+      - name: Install Mermaid filter
+        run: |
+          npm install -g @mermaid-js/mermaid-cli
+          npm install -g mermaid-filter
+
       - name: Create output directory
         run: mkdir -p output
-      
+
       - name: Convert Markdown to PDF
         run: |
-          # Find all markdown files in SystemDesign/SystemDesign
           find SystemDesign/SystemDesign -name "*.md" -type f | while read file; do
             # Get relative path from SystemDesign/SystemDesign
             rel_path="${file#SystemDesign/SystemDesign/}"
@@ -40,13 +41,21 @@ jobs:
             # Create output directory structure
             mkdir -p "output/$dir_path"
             
-            # Convert to PDF
+            # Convert to PDF with Pandoc
             echo "Converting: $file -> output/$dir_path/$filename.pdf"
-            md-to-pdf "$file" \
-              --config-file .github/md-to-pdf-config.json \
-              --dest "output/$dir_path/$filename.pdf" || echo "Failed to convert $file"
+            pandoc "$file" \
+              -o "output/$dir_path/$filename.pdf" \
+              --pdf-engine=xelatex \
+              -V geometry:margin=1in \
+              -V colorlinks=true \
+              -V linkcolor=blue \
+              -V urlcolor=blue \
+              --highlight-style=github \
+              -F mermaid-filter \
+              --standalone \
+              2>/dev/null || echo "Failed to convert $file (continuing...)"
           done
-      
+
       - name: Commit and push PDFs
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
