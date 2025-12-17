@@ -11,14 +11,10 @@
             "id": "497937d520d179da",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SystemDesign/Sessions/Cache.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Cache"
+              "title": "New tab"
             }
           }
         ]
@@ -186,11 +182,20 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "497937d520d179da",
+  "active": "ea33e1b449338732",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Cache/Discussion Topics.md",
+    "SystemDesign/Sessions/Cache/Materials.md",
+    "SystemDesign/Sessions/Load Balancer/Discussion Topics.md",
+    "SystemDesign/Sessions/Load Balancer/Materials.md",
+    "SystemDesign/Sessions/Load Balancer/demos",
+    "SystemDesign/Sessions/Cache/demos",
+    "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
+    "SystemDesign/Sessions/Cache.md",
+    "SystemDesign/Sessions/Cache/Cache.md",
+    "SystemDesign/Sessions/Load Balancer",
     "SystemDesign/Sessions/Cache",
     "SystemDesign/Sessions/Load Balancer.md",
-    "SystemDesign/Sessions/Cache.md",
     "README.md",
     "SystemDesign/README.md",
     "SystemDesign/Design/Stage3.md",
