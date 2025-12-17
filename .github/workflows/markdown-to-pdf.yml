@@ -1,0 +1,55 @@
+name: Convert Markdown to PDF
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'SystemDesign/SystemDesign/**/*.md'
+  workflow_dispatch:
+
+jobs:
+  convert-to-pdf:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install md-to-pdf
+        run: npm install -g md-to-pdf
+      
+      - name: Create output directory
+        run: mkdir -p output
+      
+      - name: Convert Markdown to PDF
+        run: |
+          # Find all markdown files in SystemDesign/SystemDesign
+          find SystemDesign/SystemDesign -name "*.md" -type f | while read file; do
+            # Get relative path from SystemDesign/SystemDesign
+            rel_path="${file#SystemDesign/SystemDesign/}"
+            
+            # Get directory and filename
+            dir_path=$(dirname "$rel_path")
+            filename=$(basename "$file" .md)
+            
+            # Create output directory structure
+            mkdir -p "output/$dir_path"
+            
+            # Convert to PDF
+            echo "Converting: $file -> output/$dir_path/$filename.pdf"
+            md-to-pdf "$file" \
+              --config-file .github/md-to-pdf-config.json \
+              --dest "output/$dir_path/$filename.pdf" || echo "Failed to convert $file"
+          done
+      
+      - name: Commit and push PDFs
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add output/
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs from markdown [skip ci]" && git push)
