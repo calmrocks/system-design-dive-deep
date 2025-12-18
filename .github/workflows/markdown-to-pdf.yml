@@ -76,6 +76,7 @@ jobs:
               -o "output/$dir_path/$filename.pdf" \
               --pdf-engine=weasyprint \
               --css=".github/styles/print.css" \
+              --wrap=none \
               --standalone \
               --resource-path="$(dirname "$file")" \
               2>&1 || echo "⚠️ Failed: $file"

@@ -22,6 +22,7 @@
 ## 🎯 Learning Objectives
 
 By the end of this session, you will understand:
+
 - What load balancing is and why it matters
 - Different types of load balancers
 - Common load balancing algorithms

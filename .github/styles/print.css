@@ -134,35 +134,65 @@ a:hover {
 
 /* Inline code */
 code {
-  font-family: "Fira Code", "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace;
+  font-family: "Fira Code", "DejaVu Sans Mono", monospace;
   font-size: 0.9em;
-  background: var(--bg-code);
+  background: #f1f5f9;
   color: #e11d48;
   padding: 0.2em 0.5em;
   border-radius: 4px;
-  border: 1px solid var(--border);
+  border: 1px solid #e2e8f0;
 }
 
 /* Code blocks */
 pre {
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: #e2e8f0;
-  padding: 1.2em 1.5em;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
+  padding: 1.2em 1.5em;
   overflow-x: auto;
   line-height: 1.5;
   margin: 1.5em 0;
   page-break-inside: avoid;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 pre code {
   background: none;
-  color: #e2e8f0;
+  color: #334155;
   padding: 0;
   border: none;
   font-size: 0.85em;
 }
+
+/* Pandoc syntax highlighting - Light theme */
+pre code span.kw { color: #8b5cf6; font-weight: bold; } /* Keyword - purple */
+pre code span.dt { color: #0891b2; }                    /* DataType - cyan */
+pre code span.dv { color: #dc2626; }                    /* DecVal - red */
+pre code span.bn { color: #dc2626; }                    /* BaseN */
+pre code span.fl { color: #dc2626; }                    /* Float */
+pre code span.ch { color: #16a34a; }                    /* Char - green */
+pre code span.st { color: #16a34a; }                    /* String - green */
+pre code span.co { color: #6b7280; font-style: italic; } /* Comment - gray */
+pre code span.ot { color: #8b5cf6; }                    /* Other */
+pre code span.al { color: #dc2626; font-weight: bold; } /* Alert */
+pre code span.fu { color: #2563eb; }                    /* Function - blue */
+pre code span.er { color: #dc2626; font-weight: bold; } /* Error */
+pre code span.wa { color: #d97706; font-style: italic; } /* Warning */
+pre code span.cn { color: #0891b2; }                    /* Constant */
+pre code span.sc { color: #16a34a; }                    /* SpecialChar */
+pre code span.vs { color: #16a34a; }                    /* VerbatimString */
+pre code span.ss { color: #16a34a; }                    /* SpecialString */
+pre code span.im { color: #8b5cf6; }                    /* Import */
+pre code span.va { color: #ea580c; }                    /* Variable - orange */
+pre code span.cf { color: #8b5cf6; font-weight: bold; } /* ControlFlow */
+pre code span.op { color: #475569; }                    /* Operator */
+pre code span.bu { color: #2563eb; }                    /* BuiltIn */
+pre code span.ex { color: #2563eb; }                    /* Extension */
+pre code span.pp { color: #8b5cf6; }                    /* Preprocessor */
+pre code span.at { color: #ea580c; }                    /* Attribute - orange (YAML keys) */
+pre code span.do { color: #6b7280; font-style: italic; } /* Documentation */
+pre code span.an { color: #6b7280; font-weight: bold; } /* Annotation */
+pre code span.cv { color: #6b7280; font-style: italic; } /* CommentVar */
+pre code span.in { color: #6b7280; }                    /* Information */
 
 /* ============================================
    Blockquotes & Callouts
@@ -204,6 +234,7 @@ ul, ol {
   display: block !important;
   margin: 1em 0 !important;
   padding-left: 2em !important;
+  list-style-position: outside;
 }
 
 li {
@@ -213,34 +244,44 @@ li {
   padding-left: 0.3em;
 }
 
-/* Fix for Pandoc wrapping list content in <p> */
+/* Handle both tight and loose lists */
 li > p {
-  display: inline;
-  margin: 0;
+  display: inline !important;
+  margin: 0 !important;
 }
 
-li > p:first-child {
-  display: inline;
+li > p:only-child {
+  display: inline !important;
+}
+
+/* Force line break after each li */
+li::after {
+  content: "";
+  display: block !important;
 }
 
 /* Nested lists */
-li > ul, 
+li > ul,
 li > ol {
-  margin-top: 0.3em !important;
-  margin-bottom: 0.3em !important;
+  margin-top: 0.5em !important;
+  margin-bottom: 0.5em !important;
 }
 
-/* List styles */
+/* List markers */
 ul {
-  list-style-type: disc;
+  list-style-type: disc !important;
 }
 
 ul ul {
-  list-style-type: circle;
+  list-style-type: circle !important;
+}
+
+ul ul ul {
+  list-style-type: square !important;
 }
 
 ol {
-  list-style-type: decimal;
+  list-style-type: decimal !important;
 }
 
 /* Task lists */
@@ -249,23 +290,31 @@ ul.task-list {
   padding-left: 0 !important;
 }
 
-ul.task-list li {
+ul.task-list > li {
   position: relative;
   padding-left: 2em;
-  margin: 0.5em 0;
 }
 
-ul.task-list li::before {
+ul.task-list > li::before {
   content: "☐";
   position: absolute;
   left: 0;
   top: 0;
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: #64748b;
 }
 
-ul.task-list li:has(input[type="checkbox"]:checked)::before {
+ul.task-list > li:has(input:checked)::before {
   content: "✅";
+}
+
+ul.task-list > li::after {
+  content: none;
+}
+
+/* Nested task lists */
+ul.task-list ul.task-list {
+  padding-left: 2em !important;
 }
 
 /* ============================================
