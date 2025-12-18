@@ -36,6 +36,7 @@ By the end of this session, you will understand:
 ### What is Load Balancing?
 
 **Load Balancing** is the process of distributing network traffic across multiple servers to ensure:
+
 - ⚡ High availability
 - 📈 Scalability
 - 🛡️ Reliability
@@ -47,6 +48,7 @@ By the end of this session, you will understand:
 > A single server has limited resources (CPU, memory, network bandwidth). As traffic grows, a single server becomes a bottleneck and single point of failure.
 
 **Benefits:**
+
 1. **Prevents server overload** - Distributes requests evenly
 2. **Increases availability** - If one server fails, others continue
 3. **Enables horizontal scaling** - Add more servers as needed
@@ -56,6 +58,7 @@ By the end of this session, you will understand:
 ### Real-World Analogy
 
 Think of a grocery store with multiple checkout lanes:
+
 - **Without load balancing:** Everyone queues at one register
 - **With load balancing:** Customers distributed across multiple registers
 
@@ -66,6 +69,7 @@ Think of a grocery store with multiple checkout lanes:
 ### By Implementation Layer
 
 #### Layer 4 (Transport Layer) Load Balancing
+
 - Operates at TCP/UDP level
 - Routes based on IP address and port
 - Fast but limited routing decisions
@@ -85,6 +89,7 @@ flowchart TD
 **Example:** AWS Network Load Balancer (NLB)
 
 #### Layer 7 (Application Layer) Load Balancing
+
 - Operates at HTTP/HTTPS level
 - Routes based on content (URL, headers, cookies)
 - Slower but more intelligent routing
@@ -456,6 +461,7 @@ Client (HTTPS) → Load Balancer (SSL termination) → Backend (HTTP)
 #### 4. Monitoring & Logging
 
 **Key Metrics to Monitor:**
+
 - Request rate (requests/second)
 - Response time (p50, p95, p99)
 - Error rate (4xx, 5xx)
@@ -605,6 +611,7 @@ flowchart TD
 ## 💡 Practical Exercise
 
 **Scenario:** You have a web application with:
+
 - 3 backend servers (different capacities)
 - Users must maintain login sessions
 - Some requests take longer than others
@@ -613,6 +620,7 @@ flowchart TD
 **Question:** Which load balancing strategy would you use and why?
 
 **Suggested Solution:**
+
 1. Use **Weighted Least Connections** algorithm
 2. Implement **centralized session storage** (Redis/Memcached)
 3. Configure **health checks** with proper thresholds
@@ -626,6 +634,7 @@ flowchart TD
 **Time remaining for questions and discussion**
 
 Common Questions:
+
 1. **When should I use Layer 4 vs Layer 7?**
    - Use Layer 4 for pure TCP/UDP traffic, high performance needs
    - Use Layer 7 for HTTP/HTTPS with content-based routing
