@@ -3,6 +3,7 @@
 # Load Balancing
 
 **Duration:** 60 minutes
+
 **Level:** Intermediate
 
 
@@ -69,11 +70,15 @@ Think of a grocery store with multiple checkout lanes:
 - Fast but limited routing decisions
 - Cannot inspect packet content
 
-~~~
-Client Request → Load Balancer (checks IP:Port) → Backend Server
-                      ↓
-              Forwards packets
-              (no content inspection)
+~~~mermaid
+flowchart TD
+    Client([Client Request])
+    LB[Load Balancer<br/>checks IP:Port]
+    Backend[Backend Server]
+    
+    Client --> LB
+    LB --> Backend
+    LB -.->|Forwards packets<br/>no content inspection| Backend
 ~~~
 
 **Example:** AWS Network Load Balancer (NLB)
@@ -84,11 +89,22 @@ Client Request → Load Balancer (checks IP:Port) → Backend Server
 - Slower but more intelligent routing
 - Can perform SSL termination
 
-~~~
-Client Request → Load Balancer (checks URL/headers) → Backend Server
-                      ↓
-         Can route /api/* to API servers
-         Can route /static/* to CDN
+~~~mermaid
+flowchart LR
+    Client([🌐 Client Request])
+    LB[Load Balancer<br/>checks URL/headers]
+    API[API Servers]
+    CDN[CDN]
+    
+    Client --> LB
+    LB -->|"/api/*"| API
+    LB -->|"/static/*"| CDN
+    
+    classDef lb fill:#f59e0b,stroke:#d97706,color:#000
+    classDef backend fill:#3b82f6,stroke:#2563eb,color:#fff
+    
+    class LB lb
+    class API,CDN backend
 ~~~
 
 **Example:** AWS Application Load Balancer (ALB), Nginx
@@ -496,52 +512,59 @@ spec:
 
 ### Pattern 1: Simple Web Application
 
-~~~
-                    ┌─────────────┐
-Internet ──────────►│Load Balancer│
-                    └──────┬──────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-          ▼                ▼                ▼
-    ┌─────────┐      ┌─────────┐      ┌─────────┐
-    │ Web     │      │ Web     │      │ Web     │
-    │ Server 1│      │ Server 2│      │ Server 3│
-    └────┬────┘      └────┬────┘      └────┬────┘
-         │                │                │
-         └────────────────┼────────────────┘
-                          ▼
-                   ┌──────────────┐
-                   │   Database   │
-                   └──────────────┘
+~~~mermaid
+flowchart TD
+    Internet([🌐 Internet])
+    LB[Load Balancer]
+    WS1[Web Server 1]
+    WS2[Web Server 2]
+    WS3[Web Server 3]
+    DB[(Database)]
+
+    Internet --> LB
+    LB --> WS1
+    LB --> WS2
+    LB --> WS3
+    WS1 --> DB
+    WS2 --> DB
+    WS3 --> DB
 ~~~
 
 ### Pattern 2: Microservices Architecture
 
-~~~
-                    ┌──────────────────┐
-Internet ──────────►│ External LB      │
-                    └────────┬─────────┘
-                             │
-          ┌──────────────────┼──────────────────┐
-          │                  │                  │
-          ▼                  ▼                  ▼
-    ┌─────────┐        ┌─────────┐       ┌─────────┐
-    │   API   │        │  Auth   │       │ Static  │
-    │ Gateway │        │ Service │       │ Content │
-    └────┬────┘        └─────────┘       └─────────┘
-         │
-         │           ┌──────────────┐
-         └──────────►│ Internal LB  │
-                     └──────┬───────┘
-                            │
-         ┌──────────────────┼──────────────────┐
-         │                  │                  │
-         ▼                  ▼                  ▼
-    ┌─────────┐       ┌─────────┐       ┌─────────┐
-    │ Service │       │ Service │       │ Service │
-    │    A    │       │    B    │       │    C    │
-    └─────────┘       └─────────┘       └─────────┘
+~~~mermaid
+flowchart TD
+    Internet([🌐 Internet])
+    
+    subgraph LB_Layer["Load Balancing"]
+        ExtLB[External LB]:::lb
+    end
+    
+    subgraph Gateway["Gateway Layer"]
+        API[API Gateway]:::gateway
+        Auth[Auth Service]:::gateway
+        Static[Static Content]:::gateway
+    end
+    
+    subgraph Services["Microservices"]
+        IntLB[Internal LB]:::lb
+        SA[Service A]:::service
+        SB[Service B]:::service
+        SC[Service C]:::service
+    end
+
+    Internet --> ExtLB
+    ExtLB --> API
+    ExtLB --> Auth
+    ExtLB --> Static
+    API --> IntLB
+    IntLB --> SA
+    IntLB --> SB
+    IntLB --> SC
+
+    classDef lb fill:#f59e0b,stroke:#d97706,color:#000
+    classDef gateway fill:#3b82f6,stroke:#2563eb,color:#fff
+    classDef service fill:#10b981,stroke:#059669,color:#fff
 ~~~
 
 ---
