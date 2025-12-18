@@ -1,0 +1,23 @@
+# .github/md-to-pdf-config.yml
+# Configuration for Markdown to PDF conversion
+
+# Global settings
+output_dir: output
+css_file: .github/styles/print.css
+
+# Source definitions
+sources:
+  # Example 1: Keep full path structure
+  # courses/chapter1/intro.md -> output/courses/chapter1/intro.pdf
+  - glob: "SystemDesign/SystemDesign/**/*.md"
+    preserve_full_path: false
+
+  # Example 2: Strip the base path
+  # Books/chapter1/intro.md -> output/chapter1/intro.pdf
+  #- glob: "Books/**/*.md"
+  #  preserve_full_path: false
+
+  # Example 3: Another source with full path
+  #- glob: "docs/**/*.md"
+  #  preserve_full_path: true
+  #  enabled: true  # optional: set to false to skip this source

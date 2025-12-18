@@ -22,7 +22,7 @@
   "treeStructure": false,
   "refreshSourceControl": true,
   "basePath": "/Users/yinglonw/src/SystemDesign/system-design-dive-deep",
-  "differentIntervalCommitAndPush": true,
+  "differentIntervalCommitAndPush": false,
   "changedFilesInStatusBar": false,
   "showedMobileNotice": true,
   "refreshSourceControlTimer": 7000,

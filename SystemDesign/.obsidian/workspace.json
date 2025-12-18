@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
+                "file": "SystemDesign/Sessions/Message Queue/Message Queue.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Load Balancer"
+              "title": "Message Queue"
             }
           }
         ]
@@ -188,6 +188,11 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Message Queue/Materials.md",
+    "SystemDesign/Sessions/Load Balancer/Materials.md",
+    "SystemDesign/Sessions/Load Balancer/Discussion Topics.md",
+    "SystemDesign/Sessions/Message Queue/Message Queue.md",
+    "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
     "SystemDesign/Sessions/Circuit Breaker/Materials.md",
     "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
     "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
@@ -208,16 +213,11 @@
     "SystemDesign/Sessions/Consistent Hashing/Discussion Topics.md",
     "SystemDesign/Sessions/Consistent Hashing/Consistent Hashing.md",
     "SystemDesign/Sessions/Consistent Hashing",
-    "SystemDesign/Sessions/Message Queue/Materials.md",
     "SystemDesign/Sessions/Message Queue/Discussion Topics.md",
-    "SystemDesign/Sessions/Message Queue/Message Queue.md",
     "SystemDesign/Sessions/Message Queue",
-    "SystemDesign/Sessions/Load Balancer/Materials.md",
     "README.md",
-    "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
     "SystemDesign/Sessions/Cache/Discussion Topics.md",
     "SystemDesign/Sessions/Cache/Materials.md",
-    "SystemDesign/Sessions/Load Balancer/Discussion Topics.md",
     "SystemDesign/Sessions/Load Balancer/demos",
     "SystemDesign/Sessions/Cache/demos",
     "SystemDesign/Sessions/Cache.md",

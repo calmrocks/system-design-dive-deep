@@ -19,6 +19,7 @@
 ## 🎯 Learning Objectives
 
 By the end of this session, you will understand:
+
 - What message queues are and when to use them
 - Key differences between Kafka, RabbitMQ, and SQS
 - Pub/Sub patterns and their applications
@@ -40,6 +41,7 @@ A **message queue** is a form of asynchronous service-to-service communication u
 ### Why Use Message Queues?
 
 **Key Benefits:**
+
 - 🔄 **Decoupling:** Services don't need to know about each other
 - ⚡ **Async Processing:** Non-blocking operations
 - 📈 **Scalability:** Handle traffic spikes with buffering
@@ -94,6 +96,7 @@ Asynchronous (Message Queue):
 ~~~
 
 **Key Features:**
+
 - Log-based storage (append-only)
 - Consumer groups for parallel processing
 - Message retention (configurable)
@@ -141,6 +144,7 @@ while (true) {
 ~~~
 
 **Key Features:**
+
 - Flexible routing with exchanges
 - Message acknowledgments
 - Dead letter queues
@@ -259,6 +263,7 @@ for message in response.get('Messages', []):
 ~~~
 
 **Use Cases:**
+
 - Event notifications
 - Real-time updates
 - Fan-out processing
@@ -280,6 +285,7 @@ for message in response.get('Messages', []):
 ~~~
 
 **Use Cases:**
+
 - Task distribution
 - Work queues
 - Load balancing
@@ -354,6 +360,7 @@ Event Sourcing:
 ~~~
 
 **Benefits:**
+
 - Complete audit trail
 - Time travel (reconstruct past states)
 - Event replay for debugging
