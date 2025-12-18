@@ -1,0 +1,460 @@
+/* ============================================
+   Modern PDF Stylesheet for Obsidian Markdown
+   ============================================ */
+
+/* Color Palette */
+:root {
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #64748b;
+  --accent: #8b5cf6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --text: #1e293b;
+  --text-light: #64748b;
+  --bg-light: #f8fafc;
+  --bg-code: #f1f5f9;
+  --border: #e2e8f0;
+}
+
+/* Page Setup */
+@page {
+  size: A4;
+  margin: 2cm 2cm 2.5cm 2cm;
+  
+  @bottom-center {
+    content: counter(page);
+    font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif;
+    font-size: 9pt;
+    color: var(--text-light);
+  }
+}
+
+@page :first {
+  @bottom-center {
+    content: none;
+  }
+}
+
+/* Body */
+body {
+  font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif;
+  font-size: 11pt;
+  line-height: 1.8;
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================
+   Headings
+   ============================================ */
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: "Noto Sans CJK SC", "Noto Sans", sans-serif;
+  font-weight: 700;
+  line-height: 1.3;
+  page-break-after: avoid;
+}
+
+h1 {
+  font-size: 2em;
+  color: var(--primary);
+  margin: 2em 0 1em 0;
+  padding-bottom: 0.5em;
+  border-bottom: 3px solid var(--primary);
+  page-break-before: always;
+}
+
+h1:first-of-type {
+  page-break-before: auto;
+  margin-top: 0;
+}
+
+h2 {
+  font-size: 1.5em;
+  color: var(--primary-dark);
+  margin: 1.8em 0 0.8em 0;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--border);
+}
+
+h3 {
+  font-size: 1.25em;
+  color: var(--text);
+  margin: 1.5em 0 0.6em 0;
+}
+
+h4 {
+  font-size: 1.1em;
+  color: var(--secondary);
+  margin: 1.2em 0 0.5em 0;
+}
+
+/* ============================================
+   Paragraphs & Text
+   ============================================ */
+
+p {
+  margin: 0.8em 0;
+  text-align: justify;
+}
+
+strong {
+  font-weight: 700;
+  color: var(--text);
+}
+
+em {
+  font-style: italic;
+}
+
+/* Highlighted text (converted from ==text==) */
+mark, strong em, em strong {
+  background: linear-gradient(120deg, #fef08a 0%, #fde047 100%);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+a:hover {
+  border-bottom-color: var(--primary);
+}
+
+/* ============================================
+   Code
+   ============================================ */
+
+/* Inline code */
+code {
+  font-family: "Fira Code", "Noto Sans Mono CJK SC", "DejaVu Sans Mono", monospace;
+  font-size: 0.9em;
+  background: var(--bg-code);
+  color: #e11d48;
+  padding: 0.2em 0.5em;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+/* Code blocks */
+pre {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  color: #e2e8f0;
+  padding: 1.2em 1.5em;
+  border-radius: 8px;
+  overflow-x: auto;
+  line-height: 1.5;
+  margin: 1.5em 0;
+  page-break-inside: avoid;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+pre code {
+  background: none;
+  color: #e2e8f0;
+  padding: 0;
+  border: none;
+  font-size: 0.85em;
+}
+
+/* ============================================
+   Blockquotes & Callouts
+   ============================================ */
+
+blockquote {
+  margin: 1.5em 0;
+  padding: 1em 1.5em;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 8px 8px 0;
+  font-style: normal;
+  page-break-inside: avoid;
+}
+
+blockquote p {
+  margin: 0.5em 0;
+}
+
+blockquote p:first-child {
+  margin-top: 0;
+}
+
+blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Nested blockquotes */
+blockquote blockquote {
+  margin: 1em 0;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ============================================
+   Lists
+   ============================================ */
+
+ul, ol {
+  margin: 1em 0;
+  padding-left: 2em;
+}
+
+li {
+  margin: 0.4em 0;
+  line-height: 1.7;
+}
+
+li > ul, li > ol {
+  margin: 0.3em 0;
+}
+
+/* Task lists */
+ul.task-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+ul.task-list li {
+  position: relative;
+  padding-left: 2em;
+  margin: 0.5em 0;
+}
+
+ul.task-list li input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  width: 1.1em;
+  height: 1.1em;
+  margin: 0;
+  opacity: 0;
+}
+
+ul.task-list li::before {
+  content: "☐";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 1.2em;
+  color: var(--secondary);
+}
+
+ul.task-list li:has(input[type="checkbox"]:checked)::before {
+  content: "✅";
+}
+
+ul.task-list ul.task-list {
+  padding-left: 2em;
+}
+
+/* ============================================
+   Tables
+   ============================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 0.95em;
+  page-break-inside: avoid;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: white;
+}
+
+th {
+  padding: 0.8em 1em;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85em;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 0.8em 1em;
+  border-bottom: 1px solid var(--border);
+}
+
+tbody tr:nth-child(even) {
+  background: var(--bg-light);
+}
+
+tbody tr:hover {
+  background: #e0f2fe;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   Images
+   ============================================ */
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5em auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  page-break-inside: avoid;
+}
+
+figure {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+figcaption {
+  font-size: 0.9em;
+  color: var(--text-light);
+  margin-top: 0.5em;
+  font-style: italic;
+}
+
+/* ============================================
+   Horizontal Rules
+   ============================================ */
+
+hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 2.5em 0;
+}
+
+/* ============================================
+   Table of Contents
+   ============================================ */
+
+nav#TOC {
+  background: var(--bg-light);
+  padding: 1.5em 2em;
+  border-radius: 8px;
+  margin: 2em 0;
+  page-break-after: always;
+}
+
+nav#TOC::before {
+  content: "📑 Table of Contents";
+  display: block;
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  border-bottom: 2px solid var(--border);
+}
+
+nav#TOC ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+nav#TOC > ul > li {
+  margin: 0.8em 0;
+}
+
+nav#TOC ul ul {
+  padding-left: 1.5em;
+  margin-top: 0.3em;
+}
+
+nav#TOC ul ul li {
+  margin: 0.4em 0;
+  font-size: 0.95em;
+}
+
+nav#TOC a {
+  color: var(--text);
+  text-decoration: none;
+  display: block;
+  padding: 0.2em 0;
+  border-bottom: none;
+}
+
+nav#TOC a:hover {
+  color: var(--primary);
+}
+
+/* ============================================
+   Special Elements
+   ============================================ */
+
+/* Definition lists */
+dl {
+  margin: 1em 0;
+}
+
+dt {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-top: 1em;
+}
+
+dd {
+  margin-left: 2em;
+  margin-top: 0.3em;
+}
+
+/* Abbreviations */
+abbr[title] {
+  border-bottom: 1px dotted var(--secondary);
+  cursor: help;
+}
+
+/* Keyboard inputs */
+kbd {
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-family: inherit;
+  font-size: 0.9em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================================
+   Print Optimizations
+   ============================================ */
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  
+  pre, blockquote, table, img {
+    page-break-inside: avoid;
+  }
+  
+  a[href]::after {
+    content: none;
+  }
+}
+
+/* ============================================
+   Emoji Support
+   ============================================ */
+
+.emoji {
+  font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+}

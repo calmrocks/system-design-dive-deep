@@ -18,38 +18,67 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
-      - name: Install Pandoc and dependencies
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-fonts-extra
+          sudo apt-get install -y \
+            pandoc \
+            weasyprint \
+            fonts-noto \
+            fonts-noto-cjk \
+            fonts-noto-color-emoji \
+            fonts-firacode
 
       - name: Create output directory
         run: mkdir -p output
 
-      - name: Convert Markdown to PDF
+      - name: Preprocess Obsidian syntax and convert to PDF
         run: |
+          preprocess() {
+            cat "$1" | \
+            # Remove Obsidian comments
+            sed 's/%%[^%]*%%//g' | \
+            # Convert ==highlight== to <mark>
+            sed 's/==\([^=]*\)==/<mark>\1<\/mark>/g' | \
+            # Convert [[wikilink]]
+            sed 's/\[\[\([^]|]*\)\]\]/**\1**/g' | \
+            # Convert [[wikilink|display]]
+            sed 's/\[\[[^]|]*|\([^]]*\)\]\]/**\1**/g' | \
+            # Convert ![[embed]]
+            sed 's/!\[\[\([^]]*\)\]\]/[📎 \1]/g' | \
+            # Convert callouts
+            sed 's/^> \[!note\].*/> 📝 **Note**/g' | \
+            sed 's/^> \[!info\].*/> ℹ️ **Info**/g' | \
+            sed 's/^> \[!tip\].*/> 💡 **Tip**/g' | \
+            sed 's/^> \[!warning\].*/> ⚠️ **Warning**/g' | \
+            sed 's/^> \[!danger\].*/> 🚨 **Danger**/g' | \
+            sed 's/^> \[!example\].*/> 📌 **Example**/g' | \
+            sed 's/^> \[!question\].*/> ❓ **Question**/g' | \
+            sed 's/^> \[!success\].*/> ✅ **Success**/g' | \
+            sed 's/^> \[!failure\].*/> ❌ **Failure**/g' | \
+            sed 's/^> \[!bug\].*/> 🐛 **Bug**/g' | \
+            sed 's/^> \[!quote\].*/> 💬 **Quote**/g' | \
+            sed 's/^> \[!todo\].*/> ☐ **Todo**/g' | \
+            sed 's/^> \[!important\].*/> 🔥 **Important**/g'
+          }
+          
           find SystemDesign/SystemDesign -name "*.md" -type f | while read file; do
-            # Get relative path from SystemDesign/SystemDesign
             rel_path="${file#SystemDesign/SystemDesign/}"
-            
-            # Get directory and filename
             dir_path=$(dirname "$rel_path")
             filename=$(basename "$file" .md)
             
-            # Create output directory structure
             mkdir -p "output/$dir_path"
             
-            # Convert to PDF with Pandoc (without mermaid filter for now)
-            echo "Converting: $file -> output/$dir_path/$filename.pdf"
-            pandoc "$file" \
+            echo "Converting: $file"
+            
+            # Preprocess and convert
+            preprocess "$file" | pandoc \
               -o "output/$dir_path/$filename.pdf" \
-              --pdf-engine=xelatex \
-              -V geometry:margin=1in \
-              -V colorlinks=true \
-              -V linkcolor=blue \
-              -V urlcolor=blue \
-              --highlight-style=tango \
-              --standalone || echo "⚠️ Failed to convert $file (continuing...)"
+              --pdf-engine=weasyprint \
+              --css=".github/styles/print.css" \
+              --standalone \
+              --resource-path="$(dirname "$file")" \
+              2>&1 || echo "⚠️ Failed: $file"
           done
 
       - name: Commit and push PDFs
@@ -57,4 +86,4 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add -f output/
-          git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs from markdown [skip ci]" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs [skip ci]" && git push)
