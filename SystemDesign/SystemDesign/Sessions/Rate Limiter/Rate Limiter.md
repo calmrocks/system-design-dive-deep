@@ -450,3 +450,808 @@ limiter = SlidingWindowCounter(limit=100, window_seconds=60)
 | Sliding Log | O(n) | Highest | Smooth | Medium |
 | Sliding Counter | O(1) | High | Smooth | Medium |
 
+
+
+---
+
+## 3. Distributed Rate Limiting (15 min)
+
+### The Challenge
+
+In distributed systems, rate limiting becomes complex because requests can hit any server.
+
+~~~
+Problem: User makes 100 requests
+
+Without coordination:
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│Server 1 │     │Server 2 │     │Server 3 │
+│ 40 req  │     │ 35 req  │     │ 25 req  │
+│ ✓ OK    │     │ ✓ OK    │     │ ✓ OK    │
+└─────────┘     └─────────┘     └─────────┘
+
+Total: 100 requests allowed (should be limited to 50!)
+~~~
+
+### Solution 1: Centralized Rate Limiter
+
+**Use a shared data store (Redis) for rate limit counters.**
+
+~~~
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│Server 1 │     │Server 2 │     │Server 3 │
+└────┬────┘     └────┬────┘     └────┬────┘
+     │               │               │
+     └───────────────┼───────────────┘
+                     │
+              ┌──────▼──────┐
+              │    Redis    │
+              │  (Counter)  │
+              └─────────────┘
+~~~
+
+**Redis Implementation:**
+
+~~~python
+import redis
+import time
+
+class DistributedRateLimiter:
+    def __init__(self, redis_client, limit: int, window_seconds: int):
+        self.redis = redis_client
+        self.limit = limit
+        self.window = window_seconds
+    
+    def is_allowed(self, client_id: str) -> bool:
+        key = f"rate_limit:{client_id}"
+        current_time = int(time.time())
+        window_start = current_time - self.window
+        
+        # Use Redis pipeline for atomic operations
+        pipe = self.redis.pipeline()
+        
+        # Remove old entries
+        pipe.zremrangebyscore(key, 0, window_start)
+        
+        # Count current entries
+        pipe.zcard(key)
+        
+        # Add current request
+        pipe.zadd(key, {str(current_time): current_time})
+        
+        # Set expiry
+        pipe.expire(key, self.window)
+        
+        results = pipe.execute()
+        request_count = results[1]
+        
+        return request_count < self.limit
+
+# Usage
+r = redis.Redis(host='localhost', port=6379)
+limiter = DistributedRateLimiter(r, limit=100, window_seconds=60)
+
+if limiter.is_allowed("user_123"):
+    print("Request allowed")
+else:
+    print("Rate limited")
+~~~
+
+**Lua Script for Atomicity:**
+
+~~~lua
+-- rate_limit.lua
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local current_time = tonumber(ARGV[3])
+
+-- Remove old entries
+redis.call('ZREMRANGEBYSCORE', key, 0, current_time - window)
+
+-- Get current count
+local count = redis.call('ZCARD', key)
+
+if count < limit then
+    -- Add new entry
+    redis.call('ZADD', key, current_time, current_time)
+    redis.call('EXPIRE', key, window)
+    return 1  -- Allowed
+else
+    return 0  -- Rate limited
+end
+~~~
+
+~~~python
+# Using Lua script in Python
+RATE_LIMIT_SCRIPT = """
+local key = KEYS[1]
+local limit = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local current_time = tonumber(ARGV[3])
+
+redis.call('ZREMRANGEBYSCORE', key, 0, current_time - window)
+local count = redis.call('ZCARD', key)
+
+if count < limit then
+    redis.call('ZADD', key, current_time, current_time)
+    redis.call('EXPIRE', key, window)
+    return 1
+else
+    return 0
+end
+"""
+
+class AtomicRateLimiter:
+    def __init__(self, redis_client, limit: int, window_seconds: int):
+        self.redis = redis_client
+        self.limit = limit
+        self.window = window_seconds
+        self.script = self.redis.register_script(RATE_LIMIT_SCRIPT)
+    
+    def is_allowed(self, client_id: str) -> bool:
+        key = f"rate_limit:{client_id}"
+        result = self.script(
+            keys=[key],
+            args=[self.limit, self.window, int(time.time())]
+        )
+        return result == 1
+~~~
+
+### Solution 2: Token Bucket with Redis
+
+~~~python
+import redis
+import time
+
+class DistributedTokenBucket:
+    def __init__(self, redis_client, capacity: int, refill_rate: float):
+        self.redis = redis_client
+        self.capacity = capacity
+        self.refill_rate = refill_rate  # tokens per second
+    
+    def consume(self, client_id: str, tokens: int = 1) -> bool:
+        key = f"token_bucket:{client_id}"
+        now = time.time()
+        
+        # Lua script for atomic token bucket
+        script = """
+        local key = KEYS[1]
+        local capacity = tonumber(ARGV[1])
+        local refill_rate = tonumber(ARGV[2])
+        local tokens_requested = tonumber(ARGV[3])
+        local now = tonumber(ARGV[4])
+        
+        local bucket = redis.call('HMGET', key, 'tokens', 'last_refill')
+        local current_tokens = tonumber(bucket[1]) or capacity
+        local last_refill = tonumber(bucket[2]) or now
+        
+        -- Calculate tokens to add
+        local elapsed = now - last_refill
+        local tokens_to_add = elapsed * refill_rate
+        current_tokens = math.min(capacity, current_tokens + tokens_to_add)
+        
+        if current_tokens >= tokens_requested then
+            current_tokens = current_tokens - tokens_requested
+            redis.call('HMSET', key, 'tokens', current_tokens, 'last_refill', now)
+            redis.call('EXPIRE', key, 3600)
+            return 1
+        else
+            redis.call('HMSET', key, 'tokens', current_tokens, 'last_refill', now)
+            redis.call('EXPIRE', key, 3600)
+            return 0
+        end
+        """
+        
+        result = self.redis.eval(
+            script, 1, key,
+            self.capacity, self.refill_rate, tokens, now
+        )
+        return result == 1
+~~~
+
+### Solution 3: Local + Global Rate Limiting
+
+**Hybrid approach for reduced latency:**
+
+~~~
+┌─────────────────────────────────────────────────┐
+│                   Server 1                       │
+│  ┌─────────────┐                                │
+│  │ Local Cache │ ← Fast check (90% of requests) │
+│  │  (10 req)   │                                │
+│  └──────┬──────┘                                │
+│         │ Sync every 1s                         │
+└─────────┼───────────────────────────────────────┘
+          │
+          ▼
+    ┌───────────┐
+    │   Redis   │ ← Global counter
+    │ (100 req) │
+    └───────────┘
+~~~
+
+~~~python
+import time
+import threading
+from collections import defaultdict
+
+class HybridRateLimiter:
+    def __init__(self, redis_client, global_limit: int, local_limit: int, 
+                 window_seconds: int, sync_interval: float = 1.0):
+        self.redis = redis_client
+        self.global_limit = global_limit
+        self.local_limit = local_limit
+        self.window = window_seconds
+        self.sync_interval = sync_interval
+        
+        self.local_counters = defaultdict(int)
+        self.lock = threading.Lock()
+        
+        # Start sync thread
+        self.sync_thread = threading.Thread(target=self._sync_loop, daemon=True)
+        self.sync_thread.start()
+    
+    def is_allowed(self, client_id: str) -> bool:
+        with self.lock:
+            # Check local limit first (fast path)
+            if self.local_counters[client_id] >= self.local_limit:
+                return False
+            
+            self.local_counters[client_id] += 1
+            return True
+    
+    def _sync_loop(self):
+        while True:
+            time.sleep(self.sync_interval)
+            self._sync_to_redis()
+    
+    def _sync_to_redis(self):
+        with self.lock:
+            for client_id, count in list(self.local_counters.items()):
+                if count > 0:
+                    key = f"rate_limit:{client_id}"
+                    self.redis.incrby(key, count)
+                    self.redis.expire(key, self.window)
+                    
+                    # Check global limit
+                    global_count = int(self.redis.get(key) or 0)
+                    if global_count > self.global_limit:
+                        # Reduce local limit temporarily
+                        self.local_limit = max(1, self.local_limit // 2)
+                    
+            self.local_counters.clear()
+~~~
+
+### Rate Limiting at Different Layers
+
+~~~
+┌─────────────────────────────────────────────────────────┐
+│                    Rate Limiting Layers                  │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1. CDN/Edge (Cloudflare, AWS WAF)                     │
+│     └─ IP-based, geographic, DDoS protection           │
+│                                                         │
+│  2. API Gateway (Kong, AWS API Gateway)                │
+│     └─ API key, user tier, endpoint-specific           │
+│                                                         │
+│  3. Load Balancer (NGINX, HAProxy)                     │
+│     └─ Connection limits, request rate                 │
+│                                                         │
+│  4. Application Layer                                   │
+│     └─ Business logic, user-specific rules             │
+│                                                         │
+│  5. Database Layer                                      │
+│     └─ Connection pooling, query limits                │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+~~~
+
+---
+
+## 4. Implementation Patterns (10 min)
+
+### Pattern 1: API Gateway Rate Limiting
+
+**AWS API Gateway:**
+
+~~~yaml
+# serverless.yml
+functions:
+  api:
+    handler: handler.main
+    events:
+      - http:
+          path: /api/{proxy+}
+          method: any
+          throttling:
+            burstLimit: 200
+            rateLimit: 100
+~~~
+
+**Kong Rate Limiting:**
+
+~~~yaml
+# kong.yml
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 100
+      hour: 1000
+      policy: redis
+      redis_host: redis.example.com
+      redis_port: 6379
+~~~
+
+### Pattern 2: Middleware Implementation
+
+**Express.js:**
+
+~~~javascript
+const rateLimit = require('express-rate-limit');
+const RedisStore = require('rate-limit-redis');
+const Redis = require('ioredis');
+
+const redis = new Redis({
+  host: 'localhost',
+  port: 6379
+});
+
+// Basic rate limiter
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => redis.call(...args),
+  }),
+  message: {
+    error: 'Too many requests',
+    retryAfter: 60
+  }
+});
+
+// Tiered rate limiting
+const tierLimits = {
+  free: rateLimit({ windowMs: 60000, max: 10 }),
+  pro: rateLimit({ windowMs: 60000, max: 100 }),
+  enterprise: rateLimit({ windowMs: 60000, max: 1000 })
+};
+
+function tieredRateLimiter(req, res, next) {
+  const tier = req.user?.tier || 'free';
+  return tierLimits[tier](req, res, next);
+}
+
+app.use('/api/', tieredRateLimiter);
+~~~
+
+**Python FastAPI:**
+
+~~~python
+from fastapi import FastAPI, Request, HTTPException
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+@app.get("/api/resource")
+@limiter.limit("100/minute")
+async def get_resource(request: Request):
+    return {"data": "resource"}
+
+# Custom key function (by API key)
+def get_api_key(request: Request) -> str:
+    return request.headers.get("X-API-Key", get_remote_address(request))
+
+@app.get("/api/premium")
+@limiter.limit("1000/minute", key_func=get_api_key)
+async def premium_endpoint(request: Request):
+    return {"data": "premium resource"}
+~~~
+
+### Pattern 3: Response Headers
+
+**Standard Rate Limit Headers:**
+
+~~~http
+HTTP/1.1 200 OK
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 45
+X-RateLimit-Reset: 1640000000
+Retry-After: 30
+
+# When rate limited
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1640000000
+Retry-After: 30
+Content-Type: application/json
+
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please retry after 30 seconds.",
+  "retry_after": 30
+}
+~~~
+
+**Implementation:**
+
+~~~python
+from fastapi import FastAPI, Request, Response
+from fastapi.responses import JSONResponse
+
+class RateLimitMiddleware:
+    def __init__(self, app, limiter):
+        self.app = app
+        self.limiter = limiter
+    
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        
+        request = Request(scope, receive)
+        client_id = self._get_client_id(request)
+        
+        allowed, info = self.limiter.check(client_id)
+        
+        if not allowed:
+            response = JSONResponse(
+                status_code=429,
+                content={
+                    "error": "rate_limit_exceeded",
+                    "retry_after": info["retry_after"]
+                },
+                headers={
+                    "X-RateLimit-Limit": str(info["limit"]),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(info["reset"]),
+                    "Retry-After": str(info["retry_after"])
+                }
+            )
+            await response(scope, receive, send)
+            return
+        
+        # Add rate limit headers to successful responses
+        async def send_with_headers(message):
+            if message["type"] == "http.response.start":
+                headers = dict(message.get("headers", []))
+                headers[b"x-ratelimit-limit"] = str(info["limit"]).encode()
+                headers[b"x-ratelimit-remaining"] = str(info["remaining"]).encode()
+                headers[b"x-ratelimit-reset"] = str(info["reset"]).encode()
+                message["headers"] = list(headers.items())
+            await send(message)
+        
+        await self.app(scope, receive, send_with_headers)
+~~~
+
+### Pattern 4: Graceful Degradation
+
+~~~python
+class GracefulRateLimiter:
+    def __init__(self, redis_client, hard_limit: int, soft_limit: int):
+        self.redis = redis_client
+        self.hard_limit = hard_limit
+        self.soft_limit = soft_limit
+    
+    def check(self, client_id: str) -> tuple[str, dict]:
+        """
+        Returns:
+        - 'allow': Request allowed
+        - 'throttle': Request allowed but degraded
+        - 'reject': Request rejected
+        """
+        count = self._get_count(client_id)
+        
+        if count < self.soft_limit:
+            return 'allow', {'priority': 'high'}
+        elif count < self.hard_limit:
+            return 'throttle', {'priority': 'low', 'degraded': True}
+        else:
+            return 'reject', {'retry_after': 60}
+
+# Usage
+result, info = limiter.check("user_123")
+
+if result == 'allow':
+    response = full_response()
+elif result == 'throttle':
+    response = degraded_response()  # Cached/simplified response
+else:
+    raise RateLimitExceeded(info['retry_after'])
+~~~
+
+---
+
+## 5. Best Practices & Real-World Examples (10 min)
+
+### Best Practices
+
+#### 1. Choose the Right Granularity
+
+~~~python
+# Multiple rate limits for different concerns
+RATE_LIMITS = {
+    # Per-user limits
+    'user_per_second': {'limit': 10, 'window': 1},
+    'user_per_minute': {'limit': 100, 'window': 60},
+    'user_per_day': {'limit': 10000, 'window': 86400},
+    
+    # Per-IP limits (for unauthenticated)
+    'ip_per_minute': {'limit': 30, 'window': 60},
+    
+    # Per-endpoint limits
+    'search_per_minute': {'limit': 20, 'window': 60},
+    'upload_per_hour': {'limit': 10, 'window': 3600},
+    
+    # Global limits
+    'global_per_second': {'limit': 10000, 'window': 1},
+}
+~~~
+
+#### 2. Implement Backoff Strategies
+
+~~~python
+import time
+import random
+
+def exponential_backoff(attempt: int, base_delay: float = 1.0, 
+                        max_delay: float = 60.0) -> float:
+    """Calculate delay with exponential backoff and jitter"""
+    delay = min(base_delay * (2 ** attempt), max_delay)
+    jitter = random.uniform(0, delay * 0.1)
+    return delay + jitter
+
+def make_request_with_retry(url: str, max_retries: int = 5):
+    for attempt in range(max_retries):
+        response = requests.get(url)
+        
+        if response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 0))
+            delay = retry_after or exponential_backoff(attempt)
+            print(f"Rate limited. Retrying in {delay:.2f}s")
+            time.sleep(delay)
+            continue
+        
+        return response
+    
+    raise Exception("Max retries exceeded")
+~~~
+
+#### 3. Monitor and Alert
+
+~~~python
+import prometheus_client as prom
+
+# Metrics
+rate_limit_hits = prom.Counter(
+    'rate_limit_hits_total',
+    'Total rate limit hits',
+    ['client_tier', 'endpoint']
+)
+
+rate_limit_remaining = prom.Gauge(
+    'rate_limit_remaining',
+    'Remaining requests in current window',
+    ['client_id']
+)
+
+def check_rate_limit(client_id: str, endpoint: str) -> bool:
+    allowed, remaining = limiter.check(client_id)
+    
+    rate_limit_remaining.labels(client_id=client_id).set(remaining)
+    
+    if not allowed:
+        tier = get_client_tier(client_id)
+        rate_limit_hits.labels(client_tier=tier, endpoint=endpoint).inc()
+    
+    return allowed
+~~~
+
+#### 4. Provide Clear Error Messages
+
+~~~python
+def rate_limit_response(limit_info: dict) -> dict:
+    return {
+        "error": {
+            "code": "RATE_LIMIT_EXCEEDED",
+            "message": "You have exceeded the rate limit for this endpoint.",
+            "details": {
+                "limit": limit_info["limit"],
+                "window": f"{limit_info['window']} seconds",
+                "retry_after": limit_info["retry_after"],
+                "reset_at": limit_info["reset_timestamp"]
+            },
+            "documentation": "https://api.example.com/docs/rate-limits",
+            "upgrade_url": "https://example.com/pricing"
+        }
+    }
+~~~
+
+### Real-World Examples
+
+#### GitHub API
+
+~~~
+Rate Limits:
+- Unauthenticated: 60 requests/hour
+- Authenticated: 5,000 requests/hour
+- GitHub Apps: 15,000 requests/hour
+
+Headers:
+X-RateLimit-Limit: 5000
+X-RateLimit-Remaining: 4999
+X-RateLimit-Reset: 1372700873
+X-RateLimit-Resource: core
+~~~
+
+#### Twitter API
+
+~~~
+Rate Limits (v2):
+- App-level: 300 requests/15 min (tweets lookup)
+- User-level: 900 requests/15 min (user timeline)
+
+Response:
+{
+  "title": "Too Many Requests",
+  "detail": "Too Many Requests",
+  "type": "about:blank",
+  "status": 429
+}
+~~~
+
+#### Stripe API
+
+~~~
+Rate Limits:
+- Live mode: 100 requests/second
+- Test mode: 25 requests/second
+
+Special handling:
+- Idempotency keys for safe retries
+- Automatic retry with exponential backoff
+~~~
+
+#### AWS API Gateway
+
+~~~yaml
+# Default limits
+Account-level: 10,000 requests/second
+Per-method: Configurable
+
+# Throttling response
+{
+  "message": "Rate exceeded"
+}
+Status: 429
+~~~
+
+### Anti-Patterns to Avoid
+
+~~~
+❌ DON'T:
+- Rate limit without providing headers
+- Use only IP-based limiting (NAT issues)
+- Set limits too aggressively
+- Forget to handle Redis failures
+- Ignore burst requirements
+
+✅ DO:
+- Provide clear rate limit headers
+- Use multiple identifiers (user + IP)
+- Start generous, tighten based on data
+- Have fallback when Redis is down
+- Allow reasonable bursts
+~~~
+
+---
+
+## ✅ Key Takeaways
+
+1. **Rate limiting protects your system** from abuse, ensures fair usage, and maintains stability
+2. **Choose the right algorithm** based on your needs - Token Bucket for bursts, Sliding Window for accuracy
+3. **Distributed rate limiting requires coordination** - use Redis or similar shared storage
+4. **Layer your rate limits** - CDN, API Gateway, Application, Database
+5. **Provide good developer experience** - clear headers, error messages, and documentation
+6. **Monitor and iterate** - track metrics and adjust limits based on real usage
+
+---
+
+## 💡 Practical Exercise
+
+**Scenario:** Design a rate limiting system for a public API with the following requirements:
+
+**Requirements:**
+- Free tier: 100 requests/hour
+- Pro tier: 1,000 requests/hour
+- Enterprise tier: 10,000 requests/hour
+- Burst allowance: 2x limit for 10 seconds
+- Global limit: 50,000 requests/second across all users
+
+**Questions:**
+1. Which algorithm would you use?
+2. How would you handle distributed rate limiting?
+3. What headers would you return?
+4. How would you handle Redis failures?
+
+**Suggested Solution:**
+
+~~~yaml
+Architecture:
+  Algorithm: Token Bucket (for burst support)
+  Storage: Redis Cluster (distributed)
+  Fallback: Local in-memory with sync
+
+Rate Limits:
+  free:
+    capacity: 100
+    refill_rate: 100/3600  # ~0.028 tokens/sec
+    burst_capacity: 200
+    
+  pro:
+    capacity: 1000
+    refill_rate: 1000/3600  # ~0.28 tokens/sec
+    burst_capacity: 2000
+    
+  enterprise:
+    capacity: 10000
+    refill_rate: 10000/3600  # ~2.78 tokens/sec
+    burst_capacity: 20000
+
+Global:
+  algorithm: Fixed Window Counter
+  limit: 50000/second
+  
+Headers:
+  - X-RateLimit-Limit
+  - X-RateLimit-Remaining
+  - X-RateLimit-Reset
+  - Retry-After (on 429)
+
+Fallback Strategy:
+  - On Redis failure: Use local counter
+  - Sync to Redis when available
+  - Accept slightly higher limits during outage
+~~~
+
+---
+
+## Q&A Session
+
+**Time remaining for questions and discussion**
+
+Common Questions:
+
+1. **Token Bucket vs Leaky Bucket?**
+   - Token Bucket: Allows bursts, good for APIs
+   - Leaky Bucket: Constant rate, good for background jobs
+
+2. **How to handle legitimate traffic spikes?**
+   - Implement burst allowance
+   - Use adaptive rate limiting
+   - Consider queue-based throttling
+
+3. **Rate limiting in microservices?**
+   - Centralized rate limiter service
+   - Or distributed with Redis
+   - Consider service mesh (Istio, Envoy)
+
+4. **What about WebSocket connections?**
+   - Rate limit connection attempts
+   - Rate limit messages per connection
+   - Use sliding window for message rate
+
+---
+
+**Session End - Thank You! 🎉**
+
+#rate-limiting #api-design #distributed-systems #architecture #session-notes

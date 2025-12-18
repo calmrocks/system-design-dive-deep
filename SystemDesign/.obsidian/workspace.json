@@ -188,6 +188,18 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
+    "SystemDesign/Sessions/Circuit Breaker",
+    "SystemDesign/Sessions/Distributed Transactions/Materials.md",
+    "SystemDesign/Sessions/Distributed Transactions/Discussion Topics.md",
+    "SystemDesign/Sessions/Distributed Transactions/Distributed Transactions.md",
+    "SystemDesign/Sessions/Distributed Transactions",
+    "SystemDesign/Sessions/Service Discovery/Materials.md",
+    "SystemDesign/Sessions/Service Discovery/Discussion Topics.md",
+    "SystemDesign/Sessions/Service Discovery/Service Discovery.md",
+    "SystemDesign/Sessions/Service Discovery",
+    "SystemDesign/Sessions/Rate Limiter/Materials.md",
+    "SystemDesign/Sessions/Rate Limiter/Discussion Topics.md",
     "SystemDesign/Sessions/Rate Limiter/Rate Limiter.md",
     "SystemDesign/Sessions/Rate Limiter",
     "SystemDesign/Sessions/Consistent Hashing/Materials.md",
@@ -211,12 +223,6 @@
     "SystemDesign/Sessions/Load Balancer",
     "SystemDesign/Sessions/Cache",
     "SystemDesign/Sessions/Load Balancer.md",
-    "SystemDesign/README.md",
-    "SystemDesign/Design/Stage3.md",
-    "SystemDesign/Design/Stage2.md",
-    "SystemDesign/Design/Stage1.md",
-    "SystemDesign/Sessions",
-    "SystemDesign/Design",
-    "SystemDesign"
+    "SystemDesign/README.md"
   ]
 }
