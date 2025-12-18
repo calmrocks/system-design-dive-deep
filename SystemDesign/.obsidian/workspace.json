@@ -188,6 +188,8 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Circuit Breaker/Materials.md",
+    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
     "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/Sessions/Circuit Breaker",
     "SystemDesign/Sessions/Distributed Transactions/Materials.md",
@@ -221,8 +223,6 @@
     "SystemDesign/Sessions/Cache.md",
     "SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/Sessions/Load Balancer",
-    "SystemDesign/Sessions/Cache",
-    "SystemDesign/Sessions/Load Balancer.md",
-    "SystemDesign/README.md"
+    "SystemDesign/Sessions/Cache"
   ]
 }
