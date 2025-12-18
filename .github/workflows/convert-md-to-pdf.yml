@@ -7,6 +7,12 @@ on:
       - "**/*.md"
       - ".github/config/styles/**"
   workflow_dispatch:
+    inputs:
+      rebuild_all:
+        description: 'Force rebuild all PDFs (ignore incremental setting)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   convert-to-pdf:
@@ -18,6 +24,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
+          fetch-depth: 2
 
       - name: Install dependencies
         run: |
@@ -29,33 +36,76 @@ jobs:
             fonts-noto-cjk \
             fonts-noto-color-emoji \
             fonts-firacode
-
-      - name: Install yq
-        run: |
+          
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
 
       - name: Convert Markdown to PDF
+        env:
+          FORCE_REBUILD: ${{ github.event.inputs.rebuild_all }}
         run: |
           set -e
           
           CONFIG_FILE=".github/config/md-to-pdf-config.yml"
           
-          if [[ ! -f "$CONFIG_FILE" ]]; then
-            echo "❌ Config file not found: $CONFIG_FILE"
-            exit 1
-          fi
+          #─────────────────────────────────────────────────────────────
+          # Load Configuration
+          #─────────────────────────────────────────────────────────────
+          load_config() {
+            OUTPUT_DIR=$(yq '.output_dir // "output"' "$CONFIG_FILE")
+            CSS_FILE=$(yq '.css_file // ".github/config/styles/print.css"' "$CONFIG_FILE")
+            INCREMENTAL=$(yq '.incremental // false' "$CONFIG_FILE")
+            SOURCE_COUNT=$(yq '.sources | length' "$CONFIG_FILE")
+            
+            echo "📁 Output directory: $OUTPUT_DIR"
+            echo "🎨 CSS file: $CSS_FILE"
+            echo "🔄 Incremental: $INCREMENTAL"
+            echo "📚 Sources: $SOURCE_COUNT"
+          }
           
-          # Read global config
-          OUTPUT_DIR=$(yq '.output_dir // "output"' "$CONFIG_FILE")
-          CSS_FILE=$(yq '.css_file // ".github/config/styles/print.css"' "$CONFIG_FILE")
+          #─────────────────────────────────────────────────────────────
+          # Determine Build Mode
+          #─────────────────────────────────────────────────────────────
+          determine_build_mode() {
+            # Force rebuild via manual trigger
+            if [[ "$FORCE_REBUILD" == "true" ]]; then
+              BUILD_MODE="full"
+              echo "🔨 Build mode: FULL (manual trigger)"
+              return
+            fi
+            
+            # Check if styles changed
+            if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q ".github/config/styles/"; then
+              BUILD_MODE="full"
+              echo "🎨 Build mode: FULL (styles changed)"
+              return
+            fi
+            
+            # Use config setting
+            if [[ "$INCREMENTAL" == "true" ]]; then
+              BUILD_MODE="incremental"
+              echo "⚡ Build mode: INCREMENTAL (from config)"
+            else
+              BUILD_MODE="full"
+              echo "🔨 Build mode: FULL (from config)"
+            fi
+          }
           
-          echo "📁 Output directory: $OUTPUT_DIR"
-          echo "🎨 CSS file: $CSS_FILE"
+          #─────────────────────────────────────────────────────────────
+          # Get Changed Files
+          #─────────────────────────────────────────────────────────────
+          get_changed_files() {
+            if [[ "$BUILD_MODE" == "incremental" ]]; then
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD -- '*.md' 2>/dev/null | tr '\n' ' ')
+              echo "📝 Changed files: ${CHANGED_FILES:-none}"
+            else
+              CHANGED_FILES=""
+            fi
+          }
           
-          mkdir -p "$OUTPUT_DIR"
-          
-          # Preprocessing function
+          #─────────────────────────────────────────────────────────────
+          # Preprocess Obsidian Syntax
+          #─────────────────────────────────────────────────────────────
           preprocess() {
             cat "$1" | \
             sed 's/%%[^%]*%%//g' | \
@@ -78,37 +128,48 @@ jobs:
             sed 's/^> \[!important\].*/> 🔥 **Important**/g'
           }
           
+          #─────────────────────────────────────────────────────────────
+          # Helper: Get Base Path from Glob
+          #─────────────────────────────────────────────────────────────
           get_base_path() {
             echo "$1" | sed 's/\*.*$//' | sed 's:/$::'
           }
           
+          #─────────────────────────────────────────────────────────────
+          # Helper: Calculate Output Path
+          #─────────────────────────────────────────────────────────────
+          get_output_path() {
+            local file="$1"
+            local preserve_full_path="$2"
+            local base_path="$3"
+            
+            if [[ "$preserve_full_path" == "true" ]]; then
+              echo "$OUTPUT_DIR/$(dirname "$file")"
+            else
+              local rel_path="${file#$base_path/}"
+              local dir_path=$(dirname "$rel_path")
+              if [[ "$dir_path" == "." ]]; then
+                echo "$OUTPUT_DIR"
+              else
+                echo "$OUTPUT_DIR/$dir_path"
+              fi
+            fi
+          }
+          
+          #─────────────────────────────────────────────────────────────
+          # Convert Single File
+          #─────────────────────────────────────────────────────────────
           convert_file() {
             local file="$1"
             local preserve_full_path="$2"
             local base_path="$3"
-            local output_path
-            local dir_path
-            local filename
             
-            filename=$(basename "$file" .md)
-            
-            if [[ "$preserve_full_path" == "true" ]]; then
-              dir_path=$(dirname "$file")
-              output_path="$OUTPUT_DIR/$dir_path"
-            else
-              local rel_path="${file#$base_path/}"
-              dir_path=$(dirname "$rel_path")
-              if [[ "$dir_path" == "." ]]; then
-                output_path="$OUTPUT_DIR"
-              else
-                output_path="$OUTPUT_DIR/$dir_path"
-              fi
-            fi
+            local filename=$(basename "$file" .md)
+            local output_path=$(get_output_path "$file" "$preserve_full_path" "$base_path")
             
             mkdir -p "$output_path"
             
-            echo "📄 Converting: $file"
-            echo "   Output: $output_path/$filename.pdf"
+            echo "📄 $file → $output_path/$filename.pdf"
             
             if preprocess "$file" | pandoc \
               -o "$output_path/$filename.pdf" \
@@ -119,51 +180,100 @@ jobs:
               --resource-path="$(dirname "$file")" \
               2>&1; then
               echo "   ✅ Success"
+              return 0
             else
-              echo "   ⚠️ Failed: $file"
+              echo "   ⚠️ Failed"
+              return 1
             fi
           }
           
-          SOURCE_COUNT=$(yq '.sources | length' "$CONFIG_FILE")
-          echo "📚 Found $SOURCE_COUNT source(s) in config"
-          echo ""
+          #─────────────────────────────────────────────────────────────
+          # Get Files to Convert for a Source
+          #─────────────────────────────────────────────────────────────
+          get_files_for_source() {
+            local glob="$1"
+            local base_path="$2"
+            
+            FILES_TO_CONVERT=()
+            
+            if [[ "$BUILD_MODE" == "full" ]]; then
+              # Get all files matching glob
+              shopt -s globstar nullglob
+              FILES_TO_CONVERT=( $glob )
+              shopt -u globstar nullglob
+            else
+              # Get only changed files matching this source
+              for changed_file in $CHANGED_FILES; do
+                if [[ -f "$changed_file" ]] && [[ "$changed_file" == $base_path/* ]]; then
+                  FILES_TO_CONVERT+=("$changed_file")
+                fi
+              done
+            fi
+          }
           
-          for i in $(seq 0 $((SOURCE_COUNT - 1))); do
-            GLOB=$(yq ".sources[$i].glob" "$CONFIG_FILE")
-            PRESERVE_FULL_PATH=$(yq ".sources[$i].preserve_full_path // false" "$CONFIG_FILE")
-            ENABLED=$(yq ".sources[$i].enabled // true" "$CONFIG_FILE")
+          #─────────────────────────────────────────────────────────────
+          # Process Single Source
+          #─────────────────────────────────────────────────────────────
+          process_source() {
+            local index="$1"
+            
+            local glob=$(yq ".sources[$index].glob" "$CONFIG_FILE")
+            local preserve_full_path=$(yq ".sources[$index].preserve_full_path // false" "$CONFIG_FILE")
+            local enabled=$(yq ".sources[$index].enabled // true" "$CONFIG_FILE")
+            local base_path=$(get_base_path "$glob")
             
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-            echo "📂 Source $((i + 1)): $GLOB"
-            echo "   preserve_full_path: $PRESERVE_FULL_PATH"
+            echo "📂 Source: $glob"
             
-            if [[ "$ENABLED" != "true" ]]; then
-              echo "   ⏭️ Skipping (disabled)"
-              continue
+            if [[ "$enabled" != "true" ]]; then
+              echo "   ⏭️ Skipped (disabled)"
+              return
             fi
             
-            BASE_PATH=$(get_base_path "$GLOB")
+            get_files_for_source "$glob" "$base_path"
             
-            shopt -s globstar nullglob
-            files=( $GLOB )
-            shopt -u globstar nullglob
-            
-            if [[ ${#files[@]} -eq 0 ]]; then
-              echo "   ⚠️ No files found"
-              continue
+            if [[ ${#FILES_TO_CONVERT[@]} -eq 0 ]]; then
+              echo "   📭 No files to convert"
+              return
             fi
             
-            echo "   Found ${#files[@]} file(s)"
+            echo "   📝 Files: ${#FILES_TO_CONVERT[@]}"
             
-            for file in "${files[@]}"; do
-              if [[ -f "$file" ]]; then
-                convert_file "$file" "$PRESERVE_FULL_PATH" "$BASE_PATH"
-              fi
+            for file in "${FILES_TO_CONVERT[@]}"; do
+              convert_file "$file" "$preserve_full_path" "$base_path"
             done
-          done
+          }
           
-          echo ""
-          echo "✅ Conversion complete!"
+          #─────────────────────────────────────────────────────────────
+          # Main
+          #─────────────────────────────────────────────────────────────
+          main() {
+            echo "═══════════════════════════════════════════════════════"
+            echo "📚 Markdown to PDF Converter"
+            echo "═══════════════════════════════════════════════════════"
+            echo ""
+            
+            load_config
+            echo ""
+            
+            determine_build_mode
+            get_changed_files
+            echo ""
+            
+            mkdir -p "$OUTPUT_DIR"
+            
+            for i in $(seq 0 $((SOURCE_COUNT - 1))); do
+              process_source "$i"
+            done
+            
+            echo ""
+            echo "═══════════════════════════════════════════════════════"
+            echo "✅ Conversion complete!"
+            echo "═══════════════════════════════════════════════════════"
+          }
+          
+          # Run
+          main
 
       - name: Commit and push PDFs
         run: |

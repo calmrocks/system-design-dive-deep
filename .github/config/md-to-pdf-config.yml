@@ -4,6 +4,10 @@
 # Global settings
 output_dir: output
 css_file: .github/config/styles/print.css
+# Build mode: 
+#   true  = only convert changed files (faster)
+#   false = convert all files (consistent)
+incremental: true
 
 # Source definitions
 sources:

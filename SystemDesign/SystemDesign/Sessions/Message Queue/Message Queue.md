@@ -591,22 +591,27 @@ def process_message(message):
 
 ### Event-Driven Microservices
 
-~~~
-┌─────────┐     ┌─────────┐     ┌─────────┐
-│  Order  │     │Inventory│     │ Payment │
-│ Service │     │ Service │     │ Service │
-└────┬────┘     └────┬────┘     └────┬────┘
-     │               │               │
-     └───────────────┼───────────────┘
-                     │
-              ┌──────▼──────┐
-              │   Message   │
-              │   Broker    │
-              └─────────────┘
-~~~
-
-### Saga Pattern with Events
-
+~~~mermaid
+flowchart TB
+    subgraph services[Microservices Layer]
+        direction LR
+        OS[🛒 Order<br/>Service]
+        IS[📦 Inventory<br/>Service]
+        PS[💳 Payment<br/>Service]
+    end
+    
+    subgraph broker[Messaging Layer]
+        MB[("🔀 Message Broker<br/>(Kafka/RabbitMQ)")]
+    end
+    
+    OS <-->|"order.created<br/>order.updated"| MB
+    IS <-->|"inventory.reserved<br/>inventory.released"| MB
+    PS <-->|"payment.processed<br/>payment.failed"| MB
+    
+    style MB fill:#6c5ce7,color:#fff
+    style OS fill:#00b894,color:#fff
+    style IS fill:#0984e3,color:#fff
+    style PS fill:#e17055,color:#fff
 ~~~
 Order Saga:
 1. OrderCreated → 
