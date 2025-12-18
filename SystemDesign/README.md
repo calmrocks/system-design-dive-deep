@@ -131,11 +131,6 @@ See `.kiro/steering/sessions-structure.md` for detailed guidelines.
 - [[Cache/Cache|Cache]]
 - [[Load Balancer/Load Balancer|Load Balancer]]
 
-### Design Process
-- [[Design/Stage1|Stage 1 - Requirements]]
-- [[Design/Stage2|Stage 2 - High-Level Design]]
-- [[Design/Stage3|Stage 3 - Deep Dive]]
-
 ---
 
 **Last Updated**: December 2024  
