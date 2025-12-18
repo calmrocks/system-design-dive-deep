@@ -39,7 +39,7 @@ jobs:
         run: |
           set -e
           
-          CONFIG_FILE=".github/config/md-to-pdf.yml"
+          CONFIG_FILE=".github/config/md-to-pdf-config.yml"
           
           if [[ ! -f "$CONFIG_FILE" ]]; then
             echo "❌ Config file not found: $CONFIG_FILE"

@@ -514,18 +514,13 @@ def process_order(message):
 
 **Handle messages that can't be processed.**
 
-~~~
-┌──────────┐       ┌─────────┐       ┌──────────┐
-│ Producer │──────►│  Queue  │──────►│ Consumer │
-└──────────┘       └────┬────┘       └──────────┘
-                        │                  │
-                        │    Failed 3x     │
-                        │◄─────────────────┘
-                        │
-                        ▼
-                   ┌─────────┐
-                   │   DLQ   │──────► Alert/Manual Review
-                   └─────────┘
+~~~mermaid
+flowchart TB
+    P[Producer] --> Q[Queue]
+    Q --> C[Consumer]
+    C -->|Failed 3x| Q
+    Q --> DLQ[DLQ]
+    DLQ --> A[Alert/Manual Review]
 ~~~
 
 ### Monitoring & Observability
