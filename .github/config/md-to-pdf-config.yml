@@ -3,7 +3,7 @@
 
 # Global settings
 output_dir: output
-css_file: .github/styles/print.css
+css_file: .github/config/styles/print.css
 
 # Source definitions
 sources:

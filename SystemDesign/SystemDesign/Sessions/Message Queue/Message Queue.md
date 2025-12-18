@@ -395,23 +395,37 @@ class BankAccount:
 
 **Separate read and write models** for different optimization.
 
-~~~
-┌─────────────────────────────────────────────────────┐
-│                      CQRS                            │
-│                                                      │
-│  Commands (Write)          Queries (Read)           │
-│  ┌──────────────┐         ┌──────────────┐         │
-│  │ Create Order │         │ Get Orders   │         │
-│  │ Update Order │         │ Search       │         │
-│  │ Cancel Order │         │ Reports      │         │
-│  └──────┬───────┘         └──────┬───────┘         │
-│         │                        │                  │
-│         ▼                        ▼                  │
-│  ┌──────────────┐         ┌──────────────┐         │
-│  │ Write Model  │────────►│ Read Model   │         │
-│  │ (Normalized) │  Sync   │ (Denormalized)│        │
-│  └──────────────┘         └──────────────┘         │
-└─────────────────────────────────────────────────────┘
+~~~mermaid
+flowchart TB
+    subgraph CQRS[" CQRS Architecture "]
+        direction TB
+        
+        subgraph CommandSide[" "]
+            direction TB
+            CT["⬇️ Commands (Write)"]
+            C1[Create Order]
+            C2[Update Order]
+            C3[Cancel Order]
+            WM[(Write Model<br/>Normalized)]
+            
+            CT ~~~ C1 & C2 & C3
+            C1 & C2 & C3 --> WM
+        end
+        
+        subgraph QuerySide[" "]
+            direction TB
+            QT["⬇️ Queries (Read)"]
+            Q1[Get Orders]
+            Q2[Search]
+            Q3[Reports]
+            RM[(Read Model<br/>Denormalized)]
+            
+            QT ~~~ Q1 & Q2 & Q3
+            Q1 & Q2 & Q3 --> RM
+        end
+        
+        WM -->|Sync| RM
+    end
 ~~~
 
 **Benefits:**

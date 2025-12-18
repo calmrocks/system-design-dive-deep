@@ -5,8 +5,7 @@ on:
     branches: [main, master]
     paths:
       - "**/*.md"
-      - ".github/workflows/md-to-pdf-config.yml"
-      - ".github/styles/**"
+      - ".github/config/styles/**"
   workflow_dispatch:
 
 jobs:
@@ -40,38 +39,30 @@ jobs:
         run: |
           set -e
           
-          CONFIG_FILE=".github/workflows/md-to-pdf-config.yml"
+          CONFIG_FILE=".github/config/md-to-pdf.yml"
           
-          # Check if config file exists
           if [[ ! -f "$CONFIG_FILE" ]]; then
             echo "❌ Config file not found: $CONFIG_FILE"
             exit 1
           fi
           
-          # Read global config with defaults
+          # Read global config
           OUTPUT_DIR=$(yq '.output_dir // "output"' "$CONFIG_FILE")
-          CSS_FILE=$(yq '.css_file // ".github/styles/print.css"' "$CONFIG_FILE")
+          CSS_FILE=$(yq '.css_file // ".github/config/styles/print.css"' "$CONFIG_FILE")
           
           echo "📁 Output directory: $OUTPUT_DIR"
           echo "🎨 CSS file: $CSS_FILE"
           
-          # Create output directory
           mkdir -p "$OUTPUT_DIR"
           
-          # Preprocessing function for Obsidian syntax
+          # Preprocessing function
           preprocess() {
             cat "$1" | \
-            # Remove Obsidian comments
             sed 's/%%[^%]*%%//g' | \
-            # Convert ==highlight== to <mark>
             sed 's/==\([^=]*\)==/<mark>\1<\/mark>/g' | \
-            # Convert [[wikilink]]
             sed 's/\[\[\([^]|]*\)\]\]/**\1**/g' | \
-            # Convert [[wikilink|display]]
             sed 's/\[\[[^]|]*|\([^]]*\)\]\]/**\1**/g' | \
-            # Convert ![[embed]]
             sed 's/!\[\[\([^]]*\)\]\]/[📎 \1]/g' | \
-            # Convert callouts
             sed 's/^> \[!note\].*/> 📝 **Note**/g' | \
             sed 's/^> \[!info\].*/> ℹ️ **Info**/g' | \
             sed 's/^> \[!tip\].*/> 💡 **Tip**/g' | \
@@ -87,15 +78,10 @@ jobs:
             sed 's/^> \[!important\].*/> 🔥 **Important**/g'
           }
           
-          # Function to extract base path from glob pattern
-          # e.g., "Books/**/*.md" -> "Books"
           get_base_path() {
-            local glob="$1"
-            # Extract everything before the first wildcard
-            echo "$glob" | sed 's/\*.*$//' | sed 's:/$::'
+            echo "$1" | sed 's/\*.*$//' | sed 's:/$::'
           }
           
-          # Function to convert a single file
           convert_file() {
             local file="$1"
             local preserve_full_path="$2"
@@ -107,11 +93,9 @@ jobs:
             filename=$(basename "$file" .md)
             
             if [[ "$preserve_full_path" == "true" ]]; then
-              # Keep full path: Books/a/b.md -> output/Books/a/b.pdf
               dir_path=$(dirname "$file")
               output_path="$OUTPUT_DIR/$dir_path"
             else
-              # Strip base path: Books/a/b.md -> output/a/b.pdf
               local rel_path="${file#$base_path/}"
               dir_path=$(dirname "$rel_path")
               if [[ "$dir_path" == "." ]]; then
@@ -126,7 +110,6 @@ jobs:
             echo "📄 Converting: $file"
             echo "   Output: $output_path/$filename.pdf"
             
-            # Preprocess and convert
             if preprocess "$file" | pandoc \
               -o "$output_path/$filename.pdf" \
               --pdf-engine=weasyprint \
@@ -141,12 +124,10 @@ jobs:
             fi
           }
           
-          # Get number of sources
           SOURCE_COUNT=$(yq '.sources | length' "$CONFIG_FILE")
           echo "📚 Found $SOURCE_COUNT source(s) in config"
           echo ""
           
-          # Process each source
           for i in $(seq 0 $((SOURCE_COUNT - 1))); do
             GLOB=$(yq ".sources[$i].glob" "$CONFIG_FILE")
             PRESERVE_FULL_PATH=$(yq ".sources[$i].preserve_full_path // false" "$CONFIG_FILE")
@@ -155,32 +136,24 @@ jobs:
             echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
             echo "📂 Source $((i + 1)): $GLOB"
             echo "   preserve_full_path: $PRESERVE_FULL_PATH"
-            echo "   enabled: $ENABLED"
             
-            # Skip if disabled
             if [[ "$ENABLED" != "true" ]]; then
               echo "   ⏭️ Skipping (disabled)"
               continue
             fi
             
-            # Get base path for stripping
             BASE_PATH=$(get_base_path "$GLOB")
-            echo "   base_path: $BASE_PATH"
-            echo ""
             
-            # Find and convert files matching the glob
-            # Use eval to expand the glob pattern
             shopt -s globstar nullglob
             files=( $GLOB )
             shopt -u globstar nullglob
             
             if [[ ${#files[@]} -eq 0 ]]; then
-              echo "   ⚠️ No files found matching pattern"
+              echo "   ⚠️ No files found"
               continue
             fi
             
             echo "   Found ${#files[@]} file(s)"
-            echo ""
             
             for file in "${files[@]}"; do
               if [[ -f "$file" ]]; then
@@ -190,15 +163,7 @@ jobs:
           done
           
           echo ""
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "✅ Conversion complete!"
-
-      - name: List generated PDFs
-        run: |
-          echo "📋 Generated PDFs:"
-          find output -name "*.pdf" -type f | sort | while read f; do
-            echo "   $f"
-          done
 
       - name: Commit and push PDFs
         run: |
