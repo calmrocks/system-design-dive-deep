@@ -20,11 +20,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pandoc texlive-xetex texlive-fonts-recommended texlive-fonts-extra
 
-      - name: Install Mermaid filter
-        run: |
-          npm install -g @mermaid-js/mermaid-cli
-          npm install -g mermaid-filter
-
       - name: Create output directory
         run: mkdir -p output
 
@@ -41,7 +36,7 @@ jobs:
             # Create output directory structure
             mkdir -p "output/$dir_path"
             
-            # Convert to PDF with Pandoc
+            # Convert to PDF with Pandoc (without mermaid filter for now)
             echo "Converting: $file -> output/$dir_path/$filename.pdf"
             pandoc "$file" \
               -o "output/$dir_path/$filename.pdf" \
@@ -51,14 +46,12 @@ jobs:
               -V linkcolor=blue \
               -V urlcolor=blue \
               --highlight-style=tango \
-              -F mermaid-filter \
-              --standalone \
-              2>/dev/null || echo "Failed to convert $file (continuing...)"
+              --standalone || echo "⚠️ Failed to convert $file (continuing...)"
           done
 
       - name: Commit and push PDFs
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add output/
+          git add -f output/
           git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs from markdown [skip ci]" && git push)
