@@ -35,13 +35,7 @@ jobs:
         run: |
           sudo apt-get update
           
-          # Handle libasound2 package name change in Ubuntu 24.04+
-          if apt-cache show libasound2 &>/dev/null; then
-            ALSA_PKG="libasound2"
-          else
-            ALSA_PKG="libasound2t64"
-          fi
-          
+          # Install base packages first
           sudo apt-get install -y \
             pandoc \
             weasyprint \
@@ -58,8 +52,11 @@ jobs:
             libxcomposite1 \
             libxdamage1 \
             libxrandr2 \
-            libgbm1 \
-            "$ALSA_PKG"
+            libgbm1
+          
+          # Handle libasound2 package name change in Ubuntu 24.04+
+          # Try libasound2t64 first (Ubuntu 24.04+), fall back to libasound2
+          sudo apt-get install -y libasound2t64 || sudo apt-get install -y libasound2
           
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
@@ -90,6 +87,7 @@ jobs:
           set -e
           
           CONFIG_FILE=".github/config/md-to-pdf-config.yml"
+          HEADER_FILE=".github/config/header.md"
           MERMAID_CONFIG="/tmp/mermaid-config.json"
           PUPPETEER_CONFIG="/tmp/puppeteer-config.json"
           
@@ -146,7 +144,7 @@ jobs:
           }
           
           #─────────────────────────────────────────────────────────────
-          # Process Mermaid Diagrams
+          # Process Mermaid Diagrams (PNG output for better compatibility)
           #─────────────────────────────────────────────────────────────
           process_mermaid() {
             local input_file="$1"
@@ -154,38 +152,44 @@ jobs:
             local temp_md=$(mktemp)
             local counter=0
             local in_mermaid=false
+            local fence_char=""
             local mermaid_content=""
             local mermaid_dir="$work_dir/.mermaid_$(basename "$input_file" .md)"
             
             mkdir -p "$mermaid_dir"
             
             while IFS= read -r line || [[ -n "$line" ]]; do
-              if [[ "$line" =~ ^\`\`\`[[:space:]]*mermaid[[:space:]]*$ ]]; then
+              # Check for mermaid block start (both ``` and ~~~)
+              if [[ "$line" =~ ^(\`\`\`|~~~)[[:space:]]*mermaid[[:space:]]*$ ]]; then
                 in_mermaid=true
+                fence_char="${BASH_REMATCH[1]}"
                 mermaid_content=""
-              elif [[ "$in_mermaid" == true ]] && [[ "$line" =~ ^\`\`\`[[:space:]]*$ ]]; then
+              # Check for matching fence end
+              elif [[ "$in_mermaid" == true ]] && [[ "$line" =~ ^${fence_char}[[:space:]]*$ ]]; then
                 in_mermaid=false
                 counter=$((counter + 1))
                 local mmd_file="$mermaid_dir/diagram_${counter}.mmd"
-                local svg_file="$mermaid_dir/diagram_${counter}.svg"
+                local png_file="$mermaid_dir/diagram_${counter}.png"
                 
                 # Write mermaid content to temp file
                 printf '%s' "$mermaid_content" > "$mmd_file"
                 
-                # Render mermaid to SVG
-                if mmdc -i "$mmd_file" -o "$svg_file" \
+                # Render mermaid to PNG (better text rendering than SVG)
+                if mmdc -i "$mmd_file" -o "$png_file" \
                    -c "$MERMAID_CONFIG" \
                    -p "$PUPPETEER_CONFIG" \
-                   --scale 2 \
+                   -s 2 \
+                   -b white \
                    2>/dev/null; then
                   echo "   🎨 Rendered Mermaid diagram $counter"
-                  echo "![Diagram](${svg_file})" >> "$temp_md"
+                  echo "![Diagram](${png_file})" >> "$temp_md"
                 else
                   echo "   ⚠️ Failed to render Mermaid diagram $counter, keeping as code"
                   echo '```' >> "$temp_md"
                   echo "$mermaid_content" >> "$temp_md"
                   echo '```' >> "$temp_md"
                 fi
+                fence_char=""
               elif [[ "$in_mermaid" == true ]]; then
                 mermaid_content+="$line"$'\n'
               else
@@ -261,18 +265,28 @@ jobs:
             local output_path=$(get_output_path "$file" "$preserve_full_path" "$base_path")
             local file_dir=$(dirname "$file")
             local temp_processed=$(mktemp)
+            local temp_with_header=$(mktemp)
             
             mkdir -p "$output_path"
             
             echo "📄 $file → $output_path/$filename.pdf"
             
-            # Check if file contains mermaid diagrams
-            if grep -q '```mermaid' "$file"; then
-              echo "   🔍 Found Mermaid diagrams, processing..."
-              process_mermaid "$file" "$file_dir" | preprocess_obsidian > "$temp_processed"
-            else
-              cat "$file" | preprocess_obsidian > "$temp_processed"
+            # Prepend header file if it exists
+            if [[ -f "$HEADER_FILE" ]]; then
+              cat "$HEADER_FILE" > "$temp_with_header"
+              echo "" >> "$temp_with_header"
+              echo "" >> "$temp_with_header"
             fi
+            
+            # Check if file contains mermaid diagrams (both ``` and ~~~)
+            if grep -qE '^(\`\`\`|~~~)mermaid' "$file"; then
+              echo "   🔍 Found Mermaid diagrams, processing..."
+              process_mermaid "$file" "$file_dir" | preprocess_obsidian >> "$temp_with_header"
+            else
+              cat "$file" | preprocess_obsidian >> "$temp_with_header"
+            fi
+            
+            mv "$temp_with_header" "$temp_processed"
             
             if pandoc "$temp_processed" \
               -o "$output_path/$filename.pdf" \
