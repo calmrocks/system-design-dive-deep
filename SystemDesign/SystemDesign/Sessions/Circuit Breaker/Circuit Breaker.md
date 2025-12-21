@@ -33,27 +33,26 @@ By the end of this session, you will be able to:
 
 ### The Cascading Failure Problem
 
+```mermaid
+flowchart TB
+    subgraph Normal["Normal Operation"]
+        direction LR
+        API1["API Gateway"] --> Order1["Order Service"]
+        Order1 --> Payment1["Payment Service"]
+        Payment1 --> DB1[("DB")]
+    end
+    
+    subgraph Failure["Database Slowdown → Cascading Failure"]
+        direction LR
+        API2["API Gateway<br/>TIMEOUT ✗"] --> Order2["Order Service<br/>BLOCKED ✗"]
+        Order2 --> Payment2["Payment Service<br/>WAITING ✗"]
+        Payment2 --> DB2[("DB<br/>SLOW ⚠️")]
+    end
+    
+    Normal --> Failure
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Cascading Failure Example                     │
-│                                                                  │
-│  Normal Operation:                                              │
-│  ┌────────┐    ┌────────┐    ┌────────┐    ┌────────┐         │
-│  │  API   │───▶│ Order  │───▶│Payment │───▶│  DB    │         │
-│  │Gateway │    │Service │    │Service │    │        │         │
-│  └────────┘    └────────┘    └────────┘    └────────┘         │
-│                                                                  │
-│  Database Slowdown → Cascading Failure:                         │
-│  ┌────────┐    ┌────────┐    ┌────────┐    ┌────────┐         │
-│  │  API   │    │ Order  │    │Payment │    │  DB    │         │
-│  │Gateway │    │Service │    │Service │    │ SLOW   │         │
-│  │TIMEOUT │◀───│BLOCKED │◀───│WAITING │◀───│        │         │
-│  │  ✗     │    │  ✗     │    │  ✗     │    │  ⚠️    │         │
-│  └────────┘    └────────┘    └────────┘    └────────┘         │
-│                                                                  │
-│  Thread pools exhausted → All services fail!                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+Thread pools exhausted → All services fail!
 
 ### Resilience Patterns Overview
 
@@ -71,43 +70,27 @@ By the end of this session, you will be able to:
 
 ### State Machine
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   Circuit Breaker States                         │
-│                                                                  │
-│                    Success                                       │
-│                 ┌──────────┐                                    │
-│                 │          │                                    │
-│                 ▼          │                                    │
-│  ┌──────────────────────────────┐                              │
-│  │           CLOSED             │                              │
-│  │   (Normal Operation)         │                              │
-│  │   - Requests pass through    │                              │
-│  │   - Track failure count      │                              │
-│  └──────────────────────────────┘                              │
-│                 │                                               │
-│                 │ Failure threshold exceeded                    │
-│                 ▼                                               │
-│  ┌──────────────────────────────┐                              │
-│  │            OPEN              │                              │
-│  │   (Fail Fast)                │                              │
-│  │   - Reject all requests      │                              │
-│  │   - Return error immediately │                              │
-│  └──────────────────────────────┘                              │
-│                 │                                               │
-│                 │ Timeout expires                               │
-│                 ▼                                               │
-│  ┌──────────────────────────────┐                              │
-│  │         HALF-OPEN            │                              │
-│  │   (Testing Recovery)         │◀─────┐                       │
-│  │   - Allow limited requests   │      │                       │
-│  │   - Test if service healthy  │      │ Failure              │
-│  └──────────────────────────────┘      │                       │
-│                 │                       │                       │
-│                 │ Success              │                       │
-│                 └───────────────────────┘                       │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+stateDiagram-v2
+    [*] --> CLOSED
+    
+    CLOSED: Normal Operation
+    CLOSED: - Requests pass through
+    CLOSED: - Track failure count
+    
+    OPEN: Fail Fast
+    OPEN: - Reject all requests
+    OPEN: - Return error immediately
+    
+    HALF_OPEN: Testing Recovery
+    HALF_OPEN: - Allow limited requests
+    HALF_OPEN: - Test if service healthy
+    
+    CLOSED --> CLOSED: Success
+    CLOSED --> OPEN: Failure threshold exceeded
+    OPEN --> HALF_OPEN: Timeout expires
+    HALF_OPEN --> CLOSED: Success
+    HALF_OPEN --> OPEN: Failure
 ```
 
 ### Circuit Breaker Implementation
@@ -251,30 +234,24 @@ Try<Payment> result = Try.ofSupplier(decoratedSupplier)
 
 ### Thread Pool Isolation
 
+```mermaid
+flowchart TB
+    subgraph Without["Without Bulkhead (Shared Thread Pool)"]
+        SharedPool["Shared Thread Pool (100 threads)<br/>A | B | C | A | B | C | ..."]
+    end
+    
+    subgraph With["With Bulkhead (Isolated Thread Pools)"]
+        PoolA["Service A Pool<br/>(30 threads)<br/>A | A | A"]
+        PoolB["Service B Pool<br/>(30 threads)<br/>B | B | B"]
+        PoolC["Service C Pool<br/>(40 threads)<br/>C | C | C"]
+    end
+    
+    Without -->|"If Service C slow → All blocked"| With
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Bulkhead Pattern                              │
-│                                                                  │
-│  Without Bulkhead (Shared Thread Pool):                         │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │              Shared Thread Pool (100 threads)            │   │
-│  │  ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐ ┌─────┐      │   │
-│  │  │ A   │ │ B   │ │ C   │ │ A   │ │ B   │ │ C   │ ...  │   │
-│  │  └─────┘ └─────┘ └─────┘ └─────┘ └─────┘ └─────┘      │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│  If Service C is slow → All threads blocked → A & B fail!      │
-│                                                                  │
-│  With Bulkhead (Isolated Thread Pools):                         │
-│  ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐   │
-│  │ Service A Pool  │ │ Service B Pool  │ │ Service C Pool  │   │
-│  │   (30 threads)  │ │   (30 threads)  │ │   (40 threads)  │   │
-│  │ ┌───┐┌───┐┌───┐│ │ ┌───┐┌───┐┌───┐│ │ ┌───┐┌───┐┌───┐│   │
-│  │ │ A ││ A ││ A ││ │ │ B ││ B ││ B ││ │ │ C ││ C ││ C ││   │
-│  │ └───┘└───┘└───┘│ │ └───┘└───┘└───┘│ │ └───┘└───┘└───┘│   │
-│  └─────────────────┘ └─────────────────┘ └─────────────────┘   │
-│  If Service C is slow → Only C's pool affected → A & B OK!     │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Without Bulkhead:** If Service C is slow → All threads blocked → A & B fail!
+
+**With Bulkhead:** If Service C is slow → Only C's pool affected → A & B OK!
 
 ### Bulkhead Implementation
 
@@ -346,63 +323,65 @@ public class SemaphoreBulkhead {
 
 ### Exponential Backoff with Jitter
 
+```mermaid
+flowchart LR
+    A1["Attempt 1<br/>Immediate"] -->|"Wait: 1s + jitter"| A2["Attempt 2<br/>After ~1s"]
+    A2 -->|"Wait: 2s + jitter"| A3["Attempt 3<br/>After ~3s total"]
+    A3 -->|"Wait: 4s + jitter"| A4["Attempt 4<br/>After ~7s total"]
+    A4 -->|"Max retries"| Fail["Fail"]
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                  Retry with Exponential Backoff                  │
-│                                                                  │
-│  Attempt 1: Immediate                                           │
-│  ────●                                                          │
-│       │                                                         │
-│       │ Wait: 1s + jitter                                       │
-│       ▼                                                         │
-│  Attempt 2: After ~1s                                           │
-│  ─────────●                                                     │
-│            │                                                    │
-│            │ Wait: 2s + jitter                                  │
-│            ▼                                                    │
-│  Attempt 3: After ~3s total                                     │
-│  ───────────────●                                               │
-│                  │                                              │
-│                  │ Wait: 4s + jitter                            │
-│                  ▼                                              │
-│  Attempt 4: After ~7s total                                     │
-│  ───────────────────────●                                       │
-│                          │                                      │
-│                          │ Max retries reached → Fail           │
-│                          ▼                                      │
-│  ─────────────────────────────────────────────────────▶ Time    │
-│                                                                  │
-│  Formula: delay = min(base * 2^attempt + random_jitter, max)    │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Formula:** `delay = min(base * 2^attempt + random_jitter, max)`
 
 ### Why Jitter Matters
 
+```mermaid
+gantt
+    title Without Jitter (Thundering Herd)
+    dateFormat X
+    axisFormat %s
+    
+    section Client 1
+    Retry 1    :0, 1
+    Retry 2    :5, 1
+    Retry 3    :10, 1
+    
+    section Client 2
+    Retry 1    :0, 1
+    Retry 2    :5, 1
+    Retry 3    :10, 1
+    
+    section Client 3
+    Retry 1    :0, 1
+    Retry 2    :5, 1
+    Retry 3    :10, 1
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│              Without Jitter (Thundering Herd)                    │
-│                                                                  │
-│  Time ─────────────────────────────────────────────────▶        │
-│                                                                  │
-│  Client 1: ──●────────────────●────────────────●                │
-│  Client 2: ──●────────────────●────────────────●                │
-│  Client 3: ──●────────────────●────────────────●                │
-│  Client 4: ──●────────────────●────────────────●                │
-│             ▲                 ▲                ▲                 │
-│             │                 │                │                 │
-│         All retry         All retry        All retry            │
-│         together!         together!        together!            │
-│                                                                  │
-│              With Jitter (Spread Load)                          │
-│                                                                  │
-│  Client 1: ──●──────────────●────────────────●                  │
-│  Client 2: ────●──────────────●────────────────●                │
-│  Client 3: ──────●──────────────●────────────────●              │
-│  Client 4: ────────●──────────────●────────────────●            │
-│                                                                  │
-│         Retries spread out → Server can recover                 │
-└─────────────────────────────────────────────────────────────────┘
+
+**Without Jitter:** All clients retry together → Server overwhelmed!
+
+```mermaid
+gantt
+    title With Jitter (Spread Load)
+    dateFormat X
+    axisFormat %s
+    
+    section Client 1
+    Retry 1    :0, 1
+    Retry 2    :4, 1
+    Retry 3    :9, 1
+    
+    section Client 2
+    Retry 1    :1, 1
+    Retry 2    :6, 1
+    Retry 3    :11, 1
+    
+    section Client 3
+    Retry 1    :2, 1
+    Retry 2    :7, 1
+    Retry 3    :13, 1
 ```
+
+**With Jitter:** Retries spread out → Server can recover
 
 ### Retry Implementation
 
@@ -496,36 +475,27 @@ Retry retry = Retry.of("paymentService", retryConfig);
 
 ### Types of Timeouts
 
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Network
+    participant Server
+    
+    Note over Client,Network: Connect Timeout (100ms)
+    Client->>Network: SYN
+    Network->>Server: SYN
+    Server-->>Network: ACK
+    Network-->>Client: Connected
+    
+    Note over Client,Server: Read Timeout (5000ms)
+    Client->>Server: Request
+    Note over Server: Processing...
+    Server-->>Client: Response
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Timeout Types                               │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Request Timeline                      │   │
-│  │                                                          │   │
-│  │  Client          Network          Server                 │   │
-│  │    │                │                │                   │   │
-│  │    │──── Connect ───▶│               │                   │   │
-│  │    │    Timeout      │               │                   │   │
-│  │    │    (100ms)      │               │                   │   │
-│  │    │                 │──── SYN ─────▶│                   │   │
-│  │    │                 │◀─── ACK ──────│                   │   │
-│  │    │◀── Connected ───│               │                   │   │
-│  │    │                                 │                   │   │
-│  │    │────────── Request ─────────────▶│                   │   │
-│  │    │                                 │                   │   │
-│  │    │         Read Timeout            │ Processing...     │   │
-│  │    │           (5000ms)              │                   │   │
-│  │    │                                 │                   │   │
-│  │    │◀───────── Response ─────────────│                   │   │
-│  │    │                                 │                   │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  Connection Timeout: Time to establish TCP connection           │
-│  Read/Socket Timeout: Time to receive response after sending    │
-│  Request Timeout: Total time for entire operation               │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+**Connection Timeout:** Time to establish TCP connection
+**Read/Socket Timeout:** Time to receive response after sending
+**Request Timeout:** Total time for entire operation
 
 ### Timeout Configuration
 
@@ -591,43 +561,21 @@ TimeLimiter timeLimiter = TimeLimiter.of("paymentService", timeLimiterConfig);
 
 ### Graceful Degradation Patterns
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   Fallback Strategy Hierarchy                    │
-│                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Level 1: Primary Service                                │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  Real-time recommendation engine                 │    │   │
-│  │  │  - Personalized results                          │    │   │
-│  │  │  - ML-based scoring                              │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  │                         │ Failure                        │   │
-│  │                         ▼                                │   │
-│  │  Level 2: Cached Response                                │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  Return last known good response from cache      │    │   │
-│  │  │  - May be slightly stale                         │    │   │
-│  │  │  - Still personalized                            │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  │                         │ Cache Miss                     │   │
-│  │                         ▼                                │   │
-│  │  Level 3: Static Fallback                                │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  Return pre-computed popular items               │    │   │
-│  │  │  - Generic but relevant                          │    │   │
-│  │  │  - Always available                              │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  │                         │ All Else Fails                 │   │
-│  │                         ▼                                │   │
-│  │  Level 4: Empty/Minimal Response                         │   │
-│  │  ┌─────────────────────────────────────────────────┐    │   │
-│  │  │  Return empty list or minimal UI                 │    │   │
-│  │  │  - Graceful degradation                          │    │   │
-│  │  │  - User can still use other features             │    │   │
-│  │  └─────────────────────────────────────────────────┘    │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    L1["Level 1: Primary Service<br/>Real-time recommendation engine<br/>- Personalized results<br/>- ML-based scoring"]
+    L2["Level 2: Cached Response<br/>Return last known good response<br/>- May be slightly stale<br/>- Still personalized"]
+    L3["Level 3: Static Fallback<br/>Return pre-computed popular items<br/>- Generic but relevant<br/>- Always available"]
+    L4["Level 4: Empty/Minimal Response<br/>Return empty list or minimal UI<br/>- Graceful degradation<br/>- User can still use other features"]
+    
+    L1 -->|"Failure"| L2
+    L2 -->|"Cache Miss"| L3
+    L3 -->|"All Else Fails"| L4
+    
+    style L1 fill:#90EE90
+    style L2 fill:#FFE4B5
+    style L3 fill:#FFB6C1
+    style L4 fill:#D3D3D3
 ```
 
 ### Fallback Implementation

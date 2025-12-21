@@ -76,21 +76,21 @@ Target: 80-95% for most applications
 
 ### Caching Layers (Closest to Farthest from User)
 
-~~~
-┌──────────────────────────────────────────┐
-│  1. Client-Side Cache (Browser)          │  ← Fastest
-├──────────────────────────────────────────┤
-│  2. CDN Cache (Edge Locations)           │
-├──────────────────────────────────────────┤
-│  3. Application Cache (In-Memory)        │
-├──────────────────────────────────────────┤
-│  4. Distributed Cache (Redis/Memcached)  │
-├──────────────────────────────────────────┤
-│  5. Database Cache (Query Cache)         │
-├──────────────────────────────────────────┤
-│  6. Disk Cache                           │  ← Slowest (but still faster than source)
-└──────────────────────────────────────────┘
-~~~
+```mermaid
+block-beta
+    columns 1
+    block:layers
+        L1["1. Client-Side Cache (Browser) ← Fastest"]
+        L2["2. CDN Cache (Edge Locations)"]
+        L3["3. Application Cache (In-Memory)"]
+        L4["4. Distributed Cache (Redis/Memcached)"]
+        L5["5. Database Cache (Query Cache)"]
+        L6["6. Disk Cache ← Slowest"]
+    end
+    
+    style L1 fill:#90EE90
+    style L6 fill:#FFB6C1
+```
 
 ### 1. Client-Side Cache
 
@@ -157,19 +157,20 @@ def get_user(user_id):
 - **Memcached** - Simple, fast, key-value only
 - **Hazelcast** - Distributed in-memory data grid
 
-~~~
-┌─────────┐    ┌─────────┐    ┌─────────┐
-│  App    │    │  App    │    │  App    │
-│ Server 1│    │ Server 2│    │ Server 3│
-└────┬────┘    └────┬────┘    └────┬────┘
-     │              │              │
-     └──────────────┼──────────────┘
-                    │
-              ┌─────▼─────┐
-              │   Redis   │
-              │  Cluster  │
-              └───────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph AppServers["Application Servers"]
+        A1["App Server 1"]
+        A2["App Server 2"]
+        A3["App Server 3"]
+    end
+    
+    R[("Redis Cluster")]
+    
+    A1 --> R
+    A2 --> R
+    A3 --> R
+```
 
 ### 5. Database Cache
 
@@ -201,22 +202,18 @@ def get_user(user_id):
 
 **Most common pattern.** Application manages cache explicitly.
 
-~~~
-┌───────────┐
-│Application│
-└─────┬─────┘
-      │
-      │ 1. Check cache
-      ▼
-┌─────────┐       3. If miss,
-│  Cache  │          query DB
-└─────────┘          ▼
-                ┌─────────┐
-                │Database │
-                └─────────┘
-                     │
-            4. Write to cache ◄──┘
-~~~
+```mermaid
+flowchart TB
+    App["Application"]
+    Cache[("Cache")]
+    DB[("Database")]
+    
+    App -->|"1. Check cache"| Cache
+    Cache -->|"2. HIT: Return data"| App
+    Cache -.->|"3. MISS"| DB
+    DB -->|"4. Return data"| App
+    App -->|"5. Write to cache"| Cache
+```
 
 **Implementation:**
 
@@ -284,14 +281,17 @@ def update_user(user_id, data):
     return data
 ~~~
 
-~~~
-Application Write
-      │
-      ├──► Cache  ──► Database
-      │              (synchronous)
-      ▼
-   Response
-~~~
+```mermaid
+flowchart LR
+    App["Application Write"]
+    Cache[("Cache")]
+    DB[("Database")]
+    Resp["Response"]
+    
+    App --> Cache
+    Cache -->|"synchronous"| DB
+    App --> Resp
+```
 
 **Pros:**
 - Cache always consistent with DB
@@ -305,13 +305,15 @@ Application Write
 
 **Write to cache immediately, database asynchronously.**
 
-~~~
-Application Write
-      │
-      ▼
-    Cache ────► Database
-   (instant)   (batched/async)
-~~~
+```mermaid
+flowchart LR
+    App["Application Write"]
+    Cache[("Cache")]
+    DB[("Database")]
+    
+    App -->|"instant"| Cache
+    Cache -.->|"batched/async"| DB
+```
 
 ~~~python
 def update_user(user_id, data):
@@ -923,53 +925,52 @@ def update_user_transactional(user_id, data):
 
 ### Pattern 1: Simple Web Application
 
-~~~
-┌──────────┐
-│  Client  │
-└────┬─────┘
-     │
-     ▼
-┌─────────────┐      ┌─────────┐
-│ Application │◄────►│  Redis  │
-│   Server    │      │  Cache  │
-└─────┬───────┘      └─────────┘
-      │
-      ▼
-┌─────────────┐
-│  Database   │
-└─────────────┘
-~~~
+```mermaid
+flowchart TB
+    Client["Client"]
+    App["Application Server"]
+    Redis[("Redis Cache")]
+    DB[("Database")]
+    
+    Client --> App
+    App <--> Redis
+    App --> DB
+```
 
 ### Pattern 2: Microservices with Shared Cache
 
-~~~
-┌─────────┐  ┌─────────┐  ┌─────────┐
-│Service A│  │Service B│  │Service C│
-└────┬────┘  └────┬────┘  └────┬────┘
-     │            │            │
-     └────────────┼────────────┘
-                  │
-          ┌───────▼───────┐
-          │ Redis Cluster │
-          │ (Shared Cache)│
-          └───────────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph Services
+        SA["Service A"]
+        SB["Service B"]
+        SC["Service C"]
+    end
+    
+    Redis[("Redis Cluster<br/>(Shared Cache)")]
+    
+    SA --> Redis
+    SB --> Redis
+    SC --> Redis
+```
 
 ### Pattern 3: Multi-Tier Caching
 
-~~~
-Browser Cache (L1)
-      ↓
-CDN Cache (L2)
-      ↓
-App Cache (L3)
-      ↓
-Redis Cache (L4)
-      ↓
-DB Query Cache (L5)
-      ↓
-Database
-~~~
+```mermaid
+flowchart TB
+    L1["Browser Cache (L1)"]
+    L2["CDN Cache (L2)"]
+    L3["App Cache (L3)"]
+    L4["Redis Cache (L4)"]
+    L5["DB Query Cache (L5)"]
+    DB[("Database")]
+    
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+    L5 --> DB
+```
 
 ---
 
