@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/Sessions/Message Queue/Message Queue.md",
+                "file": "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Message Queue"
+              "title": "Load Balancer"
             }
           }
         ]
@@ -188,10 +188,10 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Message Queue/Message Queue.md",
     "SystemDesign/Sessions/Message Queue/Materials.md",
     "SystemDesign/Sessions/Load Balancer/Materials.md",
     "SystemDesign/Sessions/Load Balancer/Discussion Topics.md",
-    "SystemDesign/Sessions/Message Queue/Message Queue.md",
     "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
     "SystemDesign/Sessions/Circuit Breaker/Materials.md",
     "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
