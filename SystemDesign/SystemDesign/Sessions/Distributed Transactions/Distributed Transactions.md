@@ -33,29 +33,23 @@ By the end of this session, you will be able to:
 
 ### Why Distributed Transactions Are Hard
 
+```mermaid
+flowchart TB
+    subgraph Monolithic["Monolithic Transaction (Single Database = Easy)"]
+        direction TB
+        TX["BEGIN TRANSACTION<br/>UPDATE accounts SET balance = balance - 100<br/>UPDATE accounts SET balance = balance + 100<br/>COMMIT"]
+    end
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Monolithic Transaction                        │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  BEGIN TRANSACTION                                       │   │
-│  │    UPDATE accounts SET balance = balance - 100           │   │
-│  │    UPDATE accounts SET balance = balance + 100           │   │
-│  │  COMMIT                                                  │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                    Single Database = Easy                        │
-└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────┐
-│                  Distributed Transaction                         │
-│                                                                  │
-│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
-│  │   Order      │    │   Payment    │    │  Inventory   │      │
-│  │   Service    │───▶│   Service    │───▶│   Service    │      │
-│  │   (DB1)      │    │   (DB2)      │    │   (DB3)      │      │
-│  └──────────────┘    └──────────────┘    └──────────────┘      │
-│                                                                  │
-│  What if Payment succeeds but Inventory fails?                  │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart LR
+    subgraph Distributed["Distributed Transaction"]
+        direction LR
+        OS["Order Service<br/>(DB1)"] --> PS["Payment Service<br/>(DB2)"]
+        PS --> IS["Inventory Service<br/>(DB3)"]
+    end
+    
+    Q["❓ What if Payment succeeds but Inventory fails?"]
 ```
 
 ### CAP Theorem Implications
@@ -72,36 +66,33 @@ By the end of this session, you will be able to:
 
 ### How 2PC Works
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Two-Phase Commit Protocol                     │
-│                                                                  │
-│  Phase 1: PREPARE (Voting)                                      │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Coordinator                           │   │
-│  │                        │                                 │   │
-│  │         ┌──────────────┼──────────────┐                 │   │
-│  │         ▼              ▼              ▼                 │   │
-│  │    ┌────────┐    ┌────────┐    ┌────────┐              │   │
-│  │    │ Node A │    │ Node B │    │ Node C │              │   │
-│  │    │PREPARE │    │PREPARE │    │PREPARE │              │   │
-│  │    │  YES   │    │  YES   │    │  YES   │              │   │
-│  │    └────────┘    └────────┘    └────────┘              │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  Phase 2: COMMIT (Decision)                                     │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │                    Coordinator                           │   │
-│  │              (All voted YES → COMMIT)                    │   │
-│  │                        │                                 │   │
-│  │         ┌──────────────┼──────────────┐                 │   │
-│  │         ▼              ▼              ▼                 │   │
-│  │    ┌────────┐    ┌────────┐    ┌────────┐              │   │
-│  │    │ Node A │    │ Node B │    │ Node C │              │   │
-│  │    │ COMMIT │    │ COMMIT │    │ COMMIT │              │   │
-│  │    └────────┘    └────────┘    └────────┘              │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    box Phase 1: PREPARE (Voting)
+    participant C as Coordinator
+    participant A as Node A
+    participant B as Node B
+    participant D as Node C
+    end
+    
+    C->>A: PREPARE
+    C->>B: PREPARE
+    C->>D: PREPARE
+    A-->>C: YES
+    B-->>C: YES
+    D-->>C: YES
+    
+    Note over C: All voted YES → COMMIT
+    
+    rect rgb(200, 230, 200)
+    Note over C,D: Phase 2: COMMIT (Decision)
+    C->>A: COMMIT
+    C->>B: COMMIT
+    C->>D: COMMIT
+    A-->>C: ACK
+    B-->>C: ACK
+    D-->>C: ACK
+    end
 ```
 
 ### 2PC Implementation Example
@@ -185,29 +176,29 @@ public interface TransactionParticipant {
 
 ### 3PC Adds Pre-Commit Phase
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   Three-Phase Commit Protocol                    │
-│                                                                  │
-│  Phase 1: CAN-COMMIT (Query)                                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Coordinator ──▶ "Can you commit?" ──▶ Participants     │   │
-│  │  Participants ──▶ "YES/NO" ──▶ Coordinator              │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  Phase 2: PRE-COMMIT (Prepare)                                  │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Coordinator ──▶ "Prepare to commit" ──▶ Participants   │   │
-│  │  Participants ──▶ "ACK" ──▶ Coordinator                 │   │
-│  │  (Participants can now commit on timeout)               │   │
-│  └─────────────────────────────────────────────────────────┘   │
-│                                                                  │
-│  Phase 3: DO-COMMIT (Commit)                                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │  Coordinator ──▶ "Commit" ──▶ Participants              │   │
-│  │  Participants ──▶ "Done" ──▶ Coordinator                │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+sequenceDiagram
+    participant C as Coordinator
+    participant P as Participants
+    
+    rect rgb(230, 240, 255)
+    Note over C,P: Phase 1: CAN-COMMIT (Query)
+    C->>P: Can you commit?
+    P-->>C: YES/NO
+    end
+    
+    rect rgb(255, 245, 220)
+    Note over C,P: Phase 2: PRE-COMMIT (Prepare)
+    C->>P: Prepare to commit
+    P-->>C: ACK
+    Note over P: Can now commit on timeout
+    end
+    
+    rect rgb(220, 255, 220)
+    Note over C,P: Phase 3: DO-COMMIT (Commit)
+    C->>P: Commit
+    P-->>C: Done
+    end
 ```
 
 ### 2PC vs 3PC Comparison
@@ -227,60 +218,53 @@ public interface TransactionParticipant {
 
 ### Saga: Sequence of Local Transactions
 
+```mermaid
+flowchart LR
+    subgraph Forward["Forward Flow (Happy Path)"]
+        direction LR
+        T1["T1<br/>Order"] --> T2["T2<br/>Payment"]
+        T2 --> T3["T3<br/>Inventory"]
+        T3 --> T4["T4<br/>Shipping"]
+    end
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Saga Pattern                              │
-│                                                                  │
-│  Forward Flow (Happy Path):                                     │
-│  ┌────────┐   ┌────────┐   ┌────────┐   ┌────────┐            │
-│  │   T1   │──▶│   T2   │──▶│   T3   │──▶│   T4   │            │
-│  │ Order  │   │Payment │   │Inventory│   │Shipping│            │
-│  └────────┘   └────────┘   └────────┘   └────────┘            │
-│                                                                  │
-│  Compensation Flow (T3 fails):                                  │
-│  ┌────────┐   ┌────────┐   ┌────────┐                          │
-│  │   C1   │◀──│   C2   │◀──│   T3   │ ✗                        │
-│  │ Cancel │   │ Refund │   │ Failed │                          │
-│  │ Order  │   │Payment │   │        │                          │
-│  └────────┘   └────────┘   └────────┘                          │
-└─────────────────────────────────────────────────────────────────┘
+
+```mermaid
+flowchart RL
+    subgraph Compensation["Compensation Flow (T3 fails)"]
+        direction RL
+        T3F["T3<br/>Failed ❌"] --> C2["C2<br/>Refund Payment"]
+        C2 --> C1["C1<br/>Cancel Order"]
+    end
 ```
 
 ### Choreography vs Orchestration
 
+```mermaid
+flowchart LR
+    subgraph Choreography["Choreography (Event-Driven)"]
+        direction LR
+        OS1["Order<br/>Service"] -->|OrderCreated| PS1["Payment<br/>Service"]
+        PS1 -->|PaymentDone| IS1["Inventory<br/>Service"]
+        IS1 -->|InventoryReserved| OS1
+    end
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Choreography (Event-Driven)                   │
-│                                                                  │
-│  ┌────────┐  OrderCreated  ┌────────┐  PaymentDone  ┌────────┐ │
-│  │ Order  │ ─────────────▶ │Payment │ ────────────▶ │Inventory│ │
-│  │Service │                │Service │               │Service  │ │
-│  └────────┘                └────────┘               └────────┘ │
-│       ▲                                                   │     │
-│       └───────────────── InventoryReserved ───────────────┘     │
-│                                                                  │
-│  Pros: Loose coupling, no single point of failure               │
-│  Cons: Hard to track, complex failure handling                  │
-└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────┐
-│                    Orchestration (Central Control)               │
-│                                                                  │
-│                      ┌──────────────┐                           │
-│                      │  Saga        │                           │
-│                      │ Orchestrator │                           │
-│                      └──────────────┘                           │
-│                       /      |      \                           │
-│                      ▼       ▼       ▼                          │
-│               ┌────────┐ ┌────────┐ ┌────────┐                 │
-│               │ Order  │ │Payment │ │Inventory│                 │
-│               │Service │ │Service │ │Service  │                 │
-│               └────────┘ └────────┘ └────────┘                 │
-│                                                                  │
-│  Pros: Easy to track, centralized logic                         │
-│  Cons: Single point of failure, tighter coupling                │
-└─────────────────────────────────────────────────────────────────┘
+> **Pros:** Loose coupling, no single point of failure  
+> **Cons:** Hard to track, complex failure handling
+
+```mermaid
+flowchart TB
+    subgraph Orchestration["Orchestration (Central Control)"]
+        direction TB
+        ORCH["Saga<br/>Orchestrator"]
+        ORCH --> OS2["Order<br/>Service"]
+        ORCH --> PS2["Payment<br/>Service"]
+        ORCH --> IS2["Inventory<br/>Service"]
+    end
 ```
+
+> **Pros:** Easy to track, centralized logic  
+> **Cons:** Single point of failure, tighter coupling
 
 
 ### Saga Orchestrator Implementation
@@ -425,53 +409,30 @@ public class PaymentService {
 
 ### The Dual Write Problem
 
+```mermaid
+flowchart TB
+    S["Service"] -->|"1. Write to Database ✓"| DB[(Database)]
+    S -->|"2. Publish Event ❌ (fails)"| MQ[Message Broker]
+    
+    style MQ stroke:#ff0000,stroke-width:2px
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Dual Write Problem                            │
-│                                                                  │
-│  ┌────────────┐                                                 │
-│  │  Service   │                                                 │
-│  └─────┬──────┘                                                 │
-│        │                                                         │
-│        ├──────────▶ 1. Write to Database ✓                      │
-│        │                                                         │
-│        └──────────▶ 2. Publish Event ✗ (fails)                  │
-│                                                                  │
-│  Result: Database updated but event never published!            │
-│          Other services have inconsistent view                  │
-└─────────────────────────────────────────────────────────────────┘
-```
+
+> **Result:** Database updated but event never published! Other services have inconsistent view.
 
 ### Transactional Outbox Pattern
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                   Transactional Outbox Pattern                   │
-│                                                                  │
-│  ┌────────────┐                                                 │
-│  │  Service   │                                                 │
-│  └─────┬──────┘                                                 │
-│        │                                                         │
-│        ▼                                                         │
-│  ┌─────────────────────────────────────────┐                   │
-│  │           Single Transaction             │                   │
-│  │  ┌─────────────────────────────────┐   │                   │
-│  │  │ 1. Write business data          │   │                   │
-│  │  │ 2. Write event to outbox table  │   │                   │
-│  │  └─────────────────────────────────┘   │                   │
-│  └─────────────────────────────────────────┘                   │
-│                                                                  │
-│        ▼                                                         │
-│  ┌─────────────────────────────────────────┐                   │
-│  │      Message Relay (CDC/Polling)        │                   │
-│  │  Reads outbox → Publishes to broker     │                   │
-│  └─────────────────────────────────────────┘                   │
-│                                                                  │
-│        ▼                                                         │
-│  ┌─────────────────────────────────────────┐                   │
-│  │         Message Broker (Kafka)          │                   │
-│  └─────────────────────────────────────────┘                   │
-└─────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    S["Service"] --> TX
+    
+    subgraph TX["Single Transaction"]
+        W1["1. Write business data"]
+        W2["2. Write event to outbox table"]
+        W1 --> W2
+    end
+    
+    TX --> RELAY["Message Relay<br/>(CDC/Polling)<br/>Reads outbox → Publishes to broker"]
+    RELAY --> KAFKA["Message Broker<br/>(Kafka)"]
 ```
 
 ### Outbox Implementation

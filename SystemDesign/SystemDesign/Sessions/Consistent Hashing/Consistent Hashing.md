@@ -43,19 +43,24 @@ server = 12345 % 4 = 1  → Server 1
 
 **What happens when we add/remove a server?**
 
-~~~
-Before: 4 servers
-hash("user:123") % 4 = 1  → Server 1
-hash("user:456") % 4 = 0  → Server 0
-hash("user:789") % 4 = 3  → Server 3
+```mermaid
+flowchart LR
+    subgraph Before["Before: 4 servers"]
+        K1["hash('user:123') % 4 = 1"] --> S1["Server 1"]
+        K2["hash('user:456') % 4 = 0"] --> S0["Server 0"]
+        K3["hash('user:789') % 4 = 3"] --> S3["Server 3"]
+    end
+    
+    subgraph After["After: 5 servers"]
+        K1a["hash('user:123') % 5 = 0"] --> S0a["Server 0 🔄 MOVED!"]
+        K2a["hash('user:456') % 5 = 0"] --> S0b["Server 0 ✓"]
+        K3a["hash('user:789') % 5 = 4"] --> S4["Server 4 🔄 MOVED!"]
+    end
+    
+    Before --> After
+```
 
-After: 5 servers (added one)
-hash("user:123") % 5 = 0  → Server 0 (MOVED!)
-hash("user:456") % 5 = 0  → Server 0 (same)
-hash("user:789") % 5 = 4  → Server 4 (MOVED!)
-
-Result: ~80% of keys need to be remapped! 💥
-~~~
+**Result: ~80% of keys need to be remapped! 💥**
 
 > [!warning] The Redistribution Problem
 > With N servers, adding or removing one server causes (N-1)/N keys to be remapped. For 100 servers, that's 99% of all data!
@@ -72,10 +77,16 @@ Result: ~80% of keys need to be remapped! 💥
 
 **Key Insight:** Instead of mapping keys to servers directly, map both keys AND servers to a fixed hash space (ring).
 
-~~~
-Traditional:  key → hash → server_index
-Consistent:   key → hash → position_on_ring → nearest_server
-~~~
+```mermaid
+flowchart LR
+    subgraph Traditional
+        T1[key] --> T2[hash] --> T3[server_index]
+    end
+    
+    subgraph Consistent
+        C1[key] --> C2[hash] --> C3[position_on_ring] --> C4[nearest_server]
+    end
+```
 
 **Benefits:**
 - Only K/N keys remapped when adding/removing nodes (K = total keys, N = nodes)
@@ -90,18 +101,18 @@ Consistent:   key → hash → position_on_ring → nearest_server
 
 **Creating the Ring:**
 
-~~~
-Hash Space: 0 to 2^32 - 1 (or any large number)
-Visualized as a circle (ring)
-
-        0
-        │
-   270° ┼ 90°
-        │
-       180°
-
-Position = hash(identifier) % ring_size
-~~~
+```mermaid
+flowchart TB
+    subgraph Ring["Hash Ring (0 to 2^32 - 1)"]
+        direction TB
+        P0["0°"] --- P90["90°"]
+        P90 --- P180["180°"]
+        P180 --- P270["270°"]
+        P270 --- P0
+    end
+    
+    Formula["Position = hash(identifier) % ring_size"]
+```
 
 ### Placing Servers on the Ring
 
@@ -126,21 +137,19 @@ server_positions = {s: hash_to_ring(s) for s in servers}
 
 **Visual Representation:**
 
-~~~
-                    0°
-                    │
-                    │    server-A (45°)
-                    │   /
-                   ╱│╲
-                  ╱ │ ╲
-         server-D  │  ╲
-          (300°)   │   server-B (120°)
-                 ╲ │  /
-                  ╲│ /
-                   │
-                   │
-              server-C (200°)
-~~~
+```mermaid
+flowchart TB
+    subgraph HashRing["Hash Ring"]
+        direction TB
+        P0["0°"]
+        A["server-A (45°)"]
+        B["server-B (120°)"]
+        C["server-C (200°)"]
+        D["server-D (300°)"]
+        
+        P0 --> A --> B --> C --> D --> P0
+    end
+```
 
 ### Key Placement: Finding the Right Server
 
@@ -179,33 +188,22 @@ Result: "user:123" → server-B
 
 ### Adding a New Server
 
-~~~
-Before: 4 servers
-                    0°
-                    │
-                    │    A (45°)
-                   ╱│╲
-                  ╱ │ ╲
-              D   │   B (120°)
-            (300°)│  /
-                 ╲│ /
-                  │
-              C (200°)
+```mermaid
+flowchart TB
+    subgraph Before["Before: 4 servers"]
+        direction TB
+        B_0["0°"] --> B_A["A (45°)"] --> B_B["B (120°)"] --> B_C["C (200°)"] --> B_D["D (300°)"] --> B_0
+    end
+    
+    subgraph After["After: Add server-E at 150°"]
+        direction TB
+        A_0["0°"] --> A_A["A (45°)"] --> A_B["B (120°)"] --> A_E["E (150°) 🆕"] --> A_C["C (200°)"] --> A_D["D (300°)"] --> A_0
+    end
+    
+    Before --> After
+```
 
-After: Add server-E at 150°
-                    0°
-                    │
-                    │    A (45°)
-                   ╱│╲
-                  ╱ │ ╲
-              D   │   B (120°)
-            (300°)│    \
-                 ╲│     E (150°)  ← NEW
-                  │    /
-              C (200°)
-
-Only keys between 120° and 150° move from C to E!
-~~~
+**Only keys between 120° and 150° move from C to E!**
 
 **Impact Analysis:**
 
@@ -275,26 +273,30 @@ def create_virtual_nodes(server, num_vnodes=150):
 
 **Visual with Virtual Nodes:**
 
-~~~
-Physical servers: A, B
-Virtual nodes per server: 3
+```mermaid
+flowchart TB
+    subgraph VNodeRing["Ring with Virtual Nodes (Physical: A, B)"]
+        direction TB
+        P0["0°"]
+        A0["A#0 (45°)"]
+        B0["B#0 (90°)"]
+        A1["A#1 (150°)"]
+        B1["B#1 (200°)"]
+        B2["B#2 (250°)"]
+        A2["A#2 (320°)"]
+        
+        P0 --> A0 --> B0 --> A1 --> B1 --> B2 --> A2 --> P0
+    end
+    
+    style A0 fill:#4CAF50
+    style A1 fill:#4CAF50
+    style A2 fill:#4CAF50
+    style B0 fill:#2196F3
+    style B1 fill:#2196F3
+    style B2 fill:#2196F3
+```
 
-Ring:
-        0°
-        │
-   A#2  │  A#0 (45°)
-  (320°)│ /
-       ╲│/
-        │
-   B#1 ─┼─ B#0 (90°)
-  (200°)│
-       /│╲
-      / │ ╲
-   B#2  │  A#1 (150°)
-  (250°)
-
-Now load is distributed more evenly!
-~~~
+**Now load is distributed more evenly!**
 
 ### Benefits of Virtual Nodes
 
@@ -420,26 +422,31 @@ When a node fails unexpectedly:
 
 ### Data Replication with Consistent Hashing
 
-~~~
-Replication Factor: 3
-Strategy: Replicate to N-1 successor nodes
+```mermaid
+flowchart TB
+    subgraph Replication["Replication Factor: 3"]
+        direction TB
+        Key["Key 'user:123' at 80°"]
+        
+        subgraph Ring["Hash Ring"]
+            A["A (45°)"]
+            B["B (120°)<br/>🔵 Primary"]
+            E["E (150°)<br/>🟢 Replica 1"]
+            C["C (200°)<br/>🟡 Replica 2"]
+            D["D (300°)"]
+            
+            A --> B --> E --> C --> D --> A
+        end
+        
+        Key -.->|"clockwise"| B
+    end
+    
+    style B fill:#2196F3
+    style E fill:#4CAF50
+    style C fill:#FFC107
+```
 
-Key "user:123" at position 80°:
-- Primary: server-B (120°)
-- Replica 1: server-E (150°)
-- Replica 2: server-C (200°)
-
-        0°
-        │
-        │    A (45°)
-       ╱│╲
-      ╱ │ ╲
-  D   │   B (120°) ← Primary
-(300°)│    \
-     ╲│     E (150°) ← Replica 1
-      │    /
-  C (200°) ← Replica 2
-~~~
+**Strategy:** Replicate to N-1 successor nodes
 
 ---
 

@@ -50,20 +50,20 @@ A **message queue** is a form of asynchronous service-to-service communication u
 
 ### Synchronous vs Asynchronous Communication
 
-~~~
-Synchronous (HTTP/REST):
-┌─────────┐  Request   ┌─────────┐
-│Service A│───────────►│Service B│
-│         │◄───────────│         │
-└─────────┘  Response  └─────────┘
-   (waits)              (processes)
-
-Asynchronous (Message Queue):
-┌─────────┐  Publish   ┌─────────┐  Consume  ┌─────────┐
-│Service A│───────────►│  Queue  │──────────►│Service B│
-└─────────┘            └─────────┘           └─────────┘
-(continues)            (buffers)             (processes)
-~~~
+```mermaid
+flowchart LR
+    subgraph sync["Synchronous (HTTP/REST)"]
+        direction LR
+        A1[Service A<br/>waits] -->|Request| B1[Service B<br/>processes]
+        B1 -->|Response| A1
+    end
+    
+    subgraph async["Asynchronous (Message Queue)"]
+        direction LR
+        A2[Service A<br/>continues] -->|Publish| Q[Queue<br/>buffers]
+        Q -->|Consume| B2[Service B<br/>processes]
+    end
+```
 
 ### Core Concepts
 
@@ -83,17 +83,16 @@ Asynchronous (Message Queue):
 
 **Distributed event streaming platform** designed for high-throughput, fault-tolerant messaging.
 
-~~~
-┌─────────────────────────────────────────────────────┐
-│                    Kafka Cluster                     │
-├─────────────────────────────────────────────────────┤
-│  Topic: orders                                       │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐            │
-│  │Partition0│ │Partition1│ │Partition2│            │
-│  │ msg1,4,7 │ │ msg2,5,8 │ │ msg3,6,9 │            │
-│  └──────────┘ └──────────┘ └──────────┘            │
-└─────────────────────────────────────────────────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph kafka["Kafka Cluster"]
+        subgraph topic["Topic: orders"]
+            P0["Partition 0<br/>msg1, 4, 7"]
+            P1["Partition 1<br/>msg2, 5, 8"]
+            P2["Partition 2<br/>msg3, 6, 9"]
+        end
+    end
+```
 
 **Key Features:**
 
@@ -129,19 +128,20 @@ while (true) {
 
 **Traditional message broker** implementing AMQP protocol with flexible routing.
 
-~~~
-┌─────────────────────────────────────────────────────┐
-│                    RabbitMQ                          │
-│                                                      │
-│  Producer → Exchange → Binding → Queue → Consumer   │
-│                                                      │
-│  Exchange Types:                                     │
-│  • Direct   (routing key match)                     │
-│  • Fanout   (broadcast to all)                      │
-│  • Topic    (pattern matching)                      │
-│  • Headers  (header attributes)                     │
-└─────────────────────────────────────────────────────┘
-~~~
+```mermaid
+flowchart LR
+    subgraph rabbitmq["RabbitMQ"]
+        P[Producer] --> E[Exchange]
+        E -->|Binding| Q[Queue]
+        Q --> C[Consumer]
+    end
+```
+
+**Exchange Types:**
+- **Direct** - routing key match
+- **Fanout** - broadcast to all
+- **Topic** - pattern matching
+- **Headers** - header attributes
 
 **Key Features:**
 
@@ -178,21 +178,21 @@ channel.start_consuming()
 
 **Fully managed message queue service** by AWS.
 
-~~~
-┌─────────────────────────────────────────────────────┐
-│                    Amazon SQS                        │
-│                                                      │
-│  Standard Queue:                                     │
-│  • At-least-once delivery                           │
-│  • Best-effort ordering                             │
-│  • Nearly unlimited throughput                      │
-│                                                      │
-│  FIFO Queue:                                        │
-│  • Exactly-once processing                          │
-│  • Strict ordering                                  │
-│  • 300 msg/sec (3000 with batching)                │
-└─────────────────────────────────────────────────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph sqs["Amazon SQS"]
+        subgraph standard["Standard Queue"]
+            S1["At-least-once delivery"]
+            S2["Best-effort ordering"]
+            S3["Nearly unlimited throughput"]
+        end
+        subgraph fifo["FIFO Queue"]
+            F1["Exactly-once processing"]
+            F2["Strict ordering"]
+            F3["300 msg/sec (3000 with batching)"]
+        end
+    end
+```
 
 ~~~python
 # SQS Example
@@ -245,22 +245,13 @@ for message in response.get('Messages', []):
 
 **Publishers** send messages to **topics**, **subscribers** receive messages from topics they're interested in.
 
-~~~
-                    ┌─────────────┐
-                    │   Topic:    │
-┌──────────┐       │   orders    │       ┌──────────────┐
-│ Order    │──────►│             │──────►│ Inventory    │
-│ Service  │       │             │       │ Service      │
-└──────────┘       │             │       └──────────────┘
-                   │             │       ┌──────────────┐
-                   │             │──────►│ Notification │
-                   │             │       │ Service      │
-                   └─────────────┘       └──────────────┘
-                                         ┌──────────────┐
-                                    ────►│ Analytics    │
-                                         │ Service      │
-                                         └──────────────┘
-~~~
+```mermaid
+flowchart LR
+    OS[Order Service] --> T[Topic: orders]
+    T --> IS[Inventory Service]
+    T --> NS[Notification Service]
+    T --> AS[Analytics Service]
+```
 
 **Use Cases:**
 
@@ -272,17 +263,13 @@ for message in response.get('Messages', []):
 
 **One producer, one consumer** per message. Messages are consumed once.
 
-~~~
-┌──────────┐       ┌─────────┐       ┌──────────┐
-│ Producer │──────►│  Queue  │──────►│ Consumer │
-└──────────┘       └─────────┘       └──────────┘
-                        │
-                        │            ┌──────────┐
-                        └───────────►│ Consumer │
-                                     │ (backup) │
-                                     └──────────┘
-                   (only one receives each message)
-~~~
+```mermaid
+flowchart LR
+    P[Producer] --> Q[Queue]
+    Q --> C1[Consumer]
+    Q -.->|backup| C2[Consumer<br/>backup]
+```
+*Only one consumer receives each message*
 
 **Use Cases:**
 
@@ -294,35 +281,31 @@ for message in response.get('Messages', []):
 
 **Choreography:** Services react to events independently (decentralized).
 
-~~~
-Order Created Event
-        │
-        ├──► Inventory Service (reserves stock)
-        │         │
-        │         └──► Stock Reserved Event
-        │
-        ├──► Payment Service (processes payment)
-        │         │
-        │         └──► Payment Completed Event
-        │
-        └──► Notification Service (sends confirmation)
-~~~
+```mermaid
+flowchart TB
+    OC[Order Created Event]
+    OC --> IS[Inventory Service<br/>reserves stock]
+    IS --> SR[Stock Reserved Event]
+    OC --> PS[Payment Service<br/>processes payment]
+    PS --> PC[Payment Completed Event]
+    OC --> NS[Notification Service<br/>sends confirmation]
+```
 
 **Orchestration:** Central coordinator manages the workflow.
 
-~~~
-┌─────────────────────────────────────────────────────┐
-│              Order Orchestrator                      │
-│                                                      │
-│  1. Call Inventory Service                          │
-│  2. Call Payment Service                            │
-│  3. Call Shipping Service                           │
-│  4. Call Notification Service                       │
-└─────────────────────────────────────────────────────┘
-        │           │           │           │
-        ▼           ▼           ▼           ▼
-   Inventory    Payment    Shipping   Notification
-~~~
+```mermaid
+flowchart TB
+    subgraph orch["Order Orchestrator"]
+        O1["1. Call Inventory Service"]
+        O2["2. Call Payment Service"]
+        O3["3. Call Shipping Service"]
+        O4["4. Call Notification Service"]
+    end
+    orch --> IS[Inventory]
+    orch --> PS[Payment]
+    orch --> SS[Shipping]
+    orch --> NS[Notification]
+```
 
 | Aspect | Choreography | Orchestration |
 |--------|--------------|---------------|
@@ -340,24 +323,22 @@ Order Created Event
 
 **Store state as a sequence of events** rather than current state.
 
-~~~
-Traditional (State-based):
-┌─────────────────────────────────────┐
-│ Account: 12345                      │
-│ Balance: $500                       │
-│ Last Updated: 2024-01-15            │
-└─────────────────────────────────────┘
-
-Event Sourcing:
-┌─────────────────────────────────────┐
-│ Event 1: AccountCreated($0)         │
-│ Event 2: Deposited($1000)           │
-│ Event 3: Withdrawn($300)            │
-│ Event 4: Deposited($200)            │
-│ Event 5: Withdrawn($400)            │
-│ Current State: $500 (computed)      │
-└─────────────────────────────────────┘
-~~~
+```mermaid
+flowchart LR
+    subgraph traditional["Traditional (State-based)"]
+        T1["Account: 12345<br/>Balance: $500<br/>Last Updated: 2024-01-15"]
+    end
+    
+    subgraph eventsourcing["Event Sourcing"]
+        E1["Event 1: AccountCreated($0)"]
+        E2["Event 2: Deposited($1000)"]
+        E3["Event 3: Withdrawn($300)"]
+        E4["Event 4: Deposited($200)"]
+        E5["Event 5: Withdrawn($400)"]
+        E6["Current State: $500 (computed)"]
+        E1 --> E2 --> E3 --> E4 --> E5 --> E6
+    end
+```
 
 **Benefits:**
 
@@ -613,17 +594,19 @@ flowchart TB
     style IS fill:#0984e3,color:#fff
     style PS fill:#e17055,color:#fff
 ~~~
-Order Saga:
-1. OrderCreated → 
-2. InventoryReserved → 
-3. PaymentProcessed → 
-4. OrderConfirmed
-
-Compensation (on failure):
-PaymentFailed → 
-ReleaseInventory → 
-CancelOrder
-~~~
+```mermaid
+flowchart LR
+    subgraph saga["Order Saga"]
+        S1[OrderCreated] --> S2[InventoryReserved]
+        S2 --> S3[PaymentProcessed]
+        S3 --> S4[OrderConfirmed]
+    end
+    
+    subgraph compensation["Compensation (on failure)"]
+        C1[PaymentFailed] --> C2[ReleaseInventory]
+        C2 --> C3[CancelOrder]
+    end
+```
 
 ---
 

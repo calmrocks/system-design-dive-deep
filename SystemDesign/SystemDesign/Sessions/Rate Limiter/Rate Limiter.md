@@ -46,24 +46,21 @@ By the end of this session, you will understand:
 
 ### Rate Limiting Dimensions
 
-~~~
-Rate Limit Dimensions:
-
-1. By User/API Key
-   └─ 1000 requests/hour per user
-
-2. By IP Address
-   └─ 100 requests/minute per IP
-
-3. By Endpoint
-   └─ /api/search: 10 req/sec
-   └─ /api/upload: 5 req/min
-
-4. By Service Tier
-   └─ Free: 100 req/day
-   └─ Pro: 10,000 req/day
-   └─ Enterprise: Unlimited
-~~~
+```mermaid
+mindmap
+  root((Rate Limit Dimensions))
+    By User/API Key
+      1000 requests/hour per user
+    By IP Address
+      100 requests/minute per IP
+    By Endpoint
+      /api/search: 10 req/sec
+      /api/upload: 5 req/min
+    By Service Tier
+      Free: 100 req/day
+      Pro: 10,000 req/day
+      Enterprise: Unlimited
+```
 
 ### Key Metrics
 
@@ -82,18 +79,23 @@ Rate Limit Dimensions:
 
 **Concept:** Tokens are added to a bucket at a fixed rate. Each request consumes a token.
 
-~~~
-Token Bucket Visualization:
-
-Bucket Capacity: 10 tokens
-Refill Rate: 2 tokens/second
-
-Time 0s:  [🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙] 10 tokens
-Request:  [🪙🪙🪙🪙🪙🪙🪙🪙🪙⬜] 9 tokens (1 consumed)
-Time 1s:  [🪙🪙🪙🪙🪙🪙🪙🪙🪙🪙] 10 tokens (refilled, capped)
-Burst 5:  [🪙🪙🪙🪙🪙⬜⬜⬜⬜⬜] 5 tokens (5 consumed)
-Time 2s:  [🪙🪙🪙🪙🪙🪙🪙⬜⬜⬜] 7 tokens (+2 refilled)
-~~~
+```mermaid
+stateDiagram-v2
+    direction LR
+    
+    state "Token Bucket (Capacity: 10, Refill: 2/sec)" as bucket {
+        [*] --> T0: Start
+        T0: Time 0s: 10 tokens
+        T0 --> R1: Request arrives
+        R1: After Request: 9 tokens (1 consumed)
+        R1 --> T1: +1 second
+        T1: Time 1s: 10 tokens (refilled, capped)
+        T1 --> B5: Burst of 5 requests
+        B5: After Burst: 5 tokens (5 consumed)
+        B5 --> T2: +1 second
+        T2: Time 2s: 7 tokens (+2 refilled)
+    }
+```
 
 **Implementation:**
 
@@ -149,20 +151,29 @@ for i in range(15):
 
 **Concept:** Requests enter a queue (bucket) and are processed at a fixed rate. Overflow is rejected.
 
-~~~
-Leaky Bucket Visualization:
-
-        Incoming Requests
-              │
-              ▼
-    ┌─────────────────┐
-    │  🔵 🔵 🔵 🔵 🔵  │  ← Queue (bucket)
-    │  🔵 🔵 🔵       │
-    └────────┬────────┘
-             │ Fixed outflow rate
-             ▼
-        Processed at constant rate
-~~~
+```mermaid
+flowchart TB
+    subgraph Input
+        R1[Request 1]
+        R2[Request 2]
+        R3[Request 3]
+        R4[Request ...]
+    end
+    
+    subgraph Bucket["Queue (Bucket)"]
+        Q["🔵 🔵 🔵 🔵 🔵<br/>🔵 🔵 🔵"]
+    end
+    
+    subgraph Output
+        P[Processed at<br/>constant rate]
+    end
+    
+    R1 & R2 & R3 & R4 --> |Incoming Requests| Bucket
+    Bucket --> |Fixed outflow rate| P
+    
+    style Bucket fill:#e1f5fe
+    style P fill:#c8e6c9
+```
 
 **Implementation:**
 
@@ -217,18 +228,20 @@ bucket = LeakyBucket(capacity=5, leak_rate=1)
 
 **Concept:** Count requests in fixed time windows. Reset counter at window boundary.
 
-~~~
-Fixed Window Counter:
+```mermaid
+gantt
+    title Fixed Window Counter (Limit: 100 req/min)
+    dateFormat HH:mm:ss
+    axisFormat %H:%M:%S
+    
+    section Window 1
+    80 requests (allowed)    :done, w1, 12:00:00, 60s
+    
+    section Window 2
+    20 requests (allowed)    :active, w2, 12:01:00, 60s
+```
 
-Window: 1 minute, Limit: 100 requests
-
-12:00:00 - 12:00:59  │  12:01:00 - 12:01:59
-     Window 1        │       Window 2
-                     │
-[████████░░] 80 req  │  [██░░░░░░░░] 20 req
-                     │
-     ↑ Counter resets at boundary
-~~~
+> **Note:** Counter resets at window boundary (12:01:00)
 
 **Implementation:**
 
@@ -279,14 +292,16 @@ limiter = FixedWindowCounter(limit=100, window_seconds=60)
 **Cons:**
 - ❌ Boundary burst problem (2x limit at window edges)
 
-~~~
-Boundary Burst Problem:
-
-12:00:30 - 12:00:59: 100 requests (allowed)
-12:01:00 - 12:01:30: 100 requests (allowed)
-                     ↓
-Result: 200 requests in 1 minute! (2x limit)
-~~~
+```mermaid
+timeline
+    title Boundary Burst Problem
+    section Window 1 (12:00:00 - 12:00:59)
+        12:00:30 - 12:00:59 : 100 requests ✓ allowed
+    section Window 2 (12:01:00 - 12:01:59)
+        12:01:00 - 12:01:30 : 100 requests ✓ allowed
+    section Result
+        Actual 1-minute span : 200 requests in 60 seconds! (2x limit)
+```
 
 ---
 
@@ -294,19 +309,22 @@ Result: 200 requests in 1 minute! (2x limit)
 
 **Concept:** Store timestamp of each request. Count requests within sliding window.
 
-~~~
-Sliding Window Log:
-
-Current time: 12:01:30
-Window: 1 minute
-Limit: 5 requests
-
-Timestamps: [12:00:45, 12:01:00, 12:01:15, 12:01:20, 12:01:25]
-            └─────────────────────────────────────────────────┘
-                    All within last 60 seconds = 5 requests
-                    
-New request at 12:01:30 → REJECTED (limit reached)
-~~~
+```mermaid
+flowchart LR
+    subgraph Window["Sliding Window (60 sec from 12:00:30 to 12:01:30)"]
+        direction LR
+        T1["12:00:45<br/>✓"]
+        T2["12:01:00<br/>✓"]
+        T3["12:01:15<br/>✓"]
+        T4["12:01:20<br/>✓"]
+        T5["12:01:25<br/>✓"]
+    end
+    
+    NEW["New Request<br/>12:01:30"] --> |"Count = 5<br/>Limit = 5"| REJECT["❌ REJECTED<br/>(limit reached)"]
+    
+    style Window fill:#e3f2fd
+    style REJECT fill:#ffcdd2
+```
 
 **Implementation:**
 
@@ -360,20 +378,27 @@ limiter = SlidingWindowLog(limit=100, window_seconds=60)
 
 **Concept:** Hybrid of fixed window and sliding window. Weighted average of current and previous window.
 
-~~~
-Sliding Window Counter:
-
-Previous Window (12:00-12:01): 84 requests
-Current Window (12:01-12:02):  36 requests
-Current time: 12:01:15 (25% into current window)
-
-Weighted count = 84 * (1 - 0.25) + 36 * 0.25
-               = 84 * 0.75 + 36 * 0.25
-               = 63 + 9
-               = 72 requests
-
-If limit = 100, new request is ALLOWED
-~~~
+```mermaid
+flowchart TB
+    subgraph Calculation["Sliding Window Counter Calculation"]
+        direction TB
+        PREV["Previous Window<br/>(12:00-12:01)<br/>84 requests"]
+        CURR["Current Window<br/>(12:01-12:02)<br/>36 requests"]
+        TIME["Current Time: 12:01:15<br/>(25% into current window)"]
+        
+        FORMULA["Weighted Count =<br/>84 × 0.75 + 36 × 0.25<br/>= 63 + 9 = 72"]
+        
+        PREV --> FORMULA
+        CURR --> FORMULA
+        TIME --> FORMULA
+    end
+    
+    FORMULA --> RESULT["72 < 100 (limit)<br/>✅ ALLOWED"]
+    
+    style PREV fill:#fff3e0
+    style CURR fill:#e8f5e9
+    style RESULT fill:#c8e6c9
+```
 
 **Implementation:**
 
@@ -460,35 +485,36 @@ limiter = SlidingWindowCounter(limit=100, window_seconds=60)
 
 In distributed systems, rate limiting becomes complex because requests can hit any server.
 
-~~~
-Problem: User makes 100 requests
-
-Without coordination:
-┌─────────┐     ┌─────────┐     ┌─────────┐
-│Server 1 │     │Server 2 │     │Server 3 │
-│ 40 req  │     │ 35 req  │     │ 25 req  │
-│ ✓ OK    │     │ ✓ OK    │     │ ✓ OK    │
-└─────────┘     └─────────┘     └─────────┘
-
-Total: 100 requests allowed (should be limited to 50!)
-~~~
+```mermaid
+flowchart TB
+    subgraph Problem["❌ Problem: User makes 100 requests without coordination"]
+        direction LR
+        U[User<br/>100 requests] --> LB[Load Balancer]
+        LB --> S1["Server 1<br/>40 req ✓ OK"]
+        LB --> S2["Server 2<br/>35 req ✓ OK"]
+        LB --> S3["Server 3<br/>25 req ✓ OK"]
+    end
+    
+    Problem --> RESULT["Total: 100 requests allowed<br/>(should be limited to 50!)"]
+    
+    style Problem fill:#ffebee
+    style RESULT fill:#ffcdd2
+```
 
 ### Solution 1: Centralized Rate Limiter
 
 **Use a shared data store (Redis) for rate limit counters.**
 
-~~~
-┌─────────┐     ┌─────────┐     ┌─────────┐
-│Server 1 │     │Server 2 │     │Server 3 │
-└────┬────┘     └────┬────┘     └────┬────┘
-     │               │               │
-     └───────────────┼───────────────┘
-                     │
-              ┌──────▼──────┐
-              │    Redis    │
-              │  (Counter)  │
-              └─────────────┘
-~~~
+```mermaid
+flowchart TB
+    S1[Server 1] --> Redis
+    S2[Server 2] --> Redis
+    S3[Server 3] --> Redis
+    
+    Redis[(Redis<br/>Shared Counter)]
+    
+    style Redis fill:#ffcdd2
+```
 
 **Redis Implementation:**
 
@@ -654,22 +680,19 @@ class DistributedTokenBucket:
 
 **Hybrid approach for reduced latency:**
 
-~~~
-┌─────────────────────────────────────────────────┐
-│                   Server 1                       │
-│  ┌─────────────┐                                │
-│  │ Local Cache │ ← Fast check (90% of requests) │
-│  │  (10 req)   │                                │
-│  └──────┬──────┘                                │
-│         │ Sync every 1s                         │
-└─────────┼───────────────────────────────────────┘
-          │
-          ▼
-    ┌───────────┐
-    │   Redis   │ ← Global counter
-    │ (100 req) │
-    └───────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph Server1["Server 1"]
+        LC["Local Cache<br/>(10 req limit)<br/>Fast check - 90% of requests"]
+    end
+    
+    LC --> |"Sync every 1s"| Redis
+    
+    Redis[("Redis<br/>Global Counter<br/>(100 req limit)")]
+    
+    style LC fill:#e3f2fd
+    style Redis fill:#ffcdd2
+```
 
 ~~~python
 import time
@@ -725,28 +748,25 @@ class HybridRateLimiter:
 
 ### Rate Limiting at Different Layers
 
-~~~
-┌─────────────────────────────────────────────────────────┐
-│                    Rate Limiting Layers                  │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  1. CDN/Edge (Cloudflare, AWS WAF)                     │
-│     └─ IP-based, geographic, DDoS protection           │
-│                                                         │
-│  2. API Gateway (Kong, AWS API Gateway)                │
-│     └─ API key, user tier, endpoint-specific           │
-│                                                         │
-│  3. Load Balancer (NGINX, HAProxy)                     │
-│     └─ Connection limits, request rate                 │
-│                                                         │
-│  4. Application Layer                                   │
-│     └─ Business logic, user-specific rules             │
-│                                                         │
-│  5. Database Layer                                      │
-│     └─ Connection pooling, query limits                │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-~~~
+```mermaid
+flowchart TB
+    subgraph Layers["Rate Limiting Layers"]
+        direction TB
+        L1["1️⃣ CDN/Edge<br/>(Cloudflare, AWS WAF)<br/>IP-based, geographic, DDoS protection"]
+        L2["2️⃣ API Gateway<br/>(Kong, AWS API Gateway)<br/>API key, user tier, endpoint-specific"]
+        L3["3️⃣ Load Balancer<br/>(NGINX, HAProxy)<br/>Connection limits, request rate"]
+        L4["4️⃣ Application Layer<br/>Business logic, user-specific rules"]
+        L5["5️⃣ Database Layer<br/>Connection pooling, query limits"]
+        
+        L1 --> L2 --> L3 --> L4 --> L5
+    end
+    
+    style L1 fill:#e3f2fd
+    style L2 fill:#e8f5e9
+    style L3 fill:#fff3e0
+    style L4 fill:#fce4ec
+    style L5 fill:#f3e5f5
+```
 
 ---
 

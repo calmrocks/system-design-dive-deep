@@ -26,6 +26,11 @@ jobs:
           persist-credentials: true
           fetch-depth: 2
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -35,10 +40,41 @@ jobs:
             fonts-noto \
             fonts-noto-cjk \
             fonts-noto-color-emoji \
-            fonts-firacode
+            fonts-firacode \
+            libnss3 \
+            libatk1.0-0 \
+            libatk-bridge2.0-0 \
+            libcups2 \
+            libdrm2 \
+            libxkbcommon0 \
+            libxcomposite1 \
+            libxdamage1 \
+            libxrandr2 \
+            libgbm1 \
+            libasound2
           
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
+          
+          # Install mermaid-cli for diagram rendering
+          npm install -g @mermaid-js/mermaid-cli
+
+      - name: Create Mermaid config
+        run: |
+          cat > /tmp/mermaid-config.json << 'EOF'
+          {
+            "theme": "default",
+            "themeVariables": {
+              "fontFamily": "Noto Sans, sans-serif"
+            }
+          }
+          EOF
+          
+          cat > /tmp/puppeteer-config.json << 'EOF'
+          {
+            "args": ["--no-sandbox", "--disable-setuid-sandbox"]
+          }
+          EOF
 
       - name: Convert Markdown to PDF
         env:
@@ -47,6 +83,8 @@ jobs:
           set -e
           
           CONFIG_FILE=".github/config/md-to-pdf-config.yml"
+          MERMAID_CONFIG="/tmp/mermaid-config.json"
+          PUPPETEER_CONFIG="/tmp/puppeteer-config.json"
           
           #─────────────────────────────────────────────────────────────
           # Load Configuration
@@ -67,21 +105,18 @@ jobs:
           # Determine Build Mode
           #─────────────────────────────────────────────────────────────
           determine_build_mode() {
-            # Force rebuild via manual trigger
             if [[ "$FORCE_REBUILD" == "true" ]]; then
               BUILD_MODE="full"
               echo "🔨 Build mode: FULL (manual trigger)"
               return
             fi
             
-            # Check if styles changed
             if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -q ".github/config/styles/"; then
               BUILD_MODE="full"
               echo "🎨 Build mode: FULL (styles changed)"
               return
             fi
             
-            # Use config setting
             if [[ "$INCREMENTAL" == "true" ]]; then
               BUILD_MODE="incremental"
               echo "⚡ Build mode: INCREMENTAL (from config)"
@@ -104,10 +139,61 @@ jobs:
           }
           
           #─────────────────────────────────────────────────────────────
+          # Process Mermaid Diagrams
+          #─────────────────────────────────────────────────────────────
+          process_mermaid() {
+            local input_file="$1"
+            local work_dir="$2"
+            local temp_md=$(mktemp)
+            local counter=0
+            local in_mermaid=false
+            local mermaid_content=""
+            local mermaid_dir="$work_dir/.mermaid_$(basename "$input_file" .md)"
+            
+            mkdir -p "$mermaid_dir"
+            
+            while IFS= read -r line || [[ -n "$line" ]]; do
+              if [[ "$line" =~ ^\`\`\`[[:space:]]*mermaid[[:space:]]*$ ]]; then
+                in_mermaid=true
+                mermaid_content=""
+              elif [[ "$in_mermaid" == true ]] && [[ "$line" =~ ^\`\`\`[[:space:]]*$ ]]; then
+                in_mermaid=false
+                counter=$((counter + 1))
+                local mmd_file="$mermaid_dir/diagram_${counter}.mmd"
+                local svg_file="$mermaid_dir/diagram_${counter}.svg"
+                
+                # Write mermaid content to temp file
+                printf '%s' "$mermaid_content" > "$mmd_file"
+                
+                # Render mermaid to SVG
+                if mmdc -i "$mmd_file" -o "$svg_file" \
+                   -c "$MERMAID_CONFIG" \
+                   -p "$PUPPETEER_CONFIG" \
+                   --scale 2 \
+                   2>/dev/null; then
+                  echo "   🎨 Rendered Mermaid diagram $counter"
+                  echo "![Diagram](${svg_file})" >> "$temp_md"
+                else
+                  echo "   ⚠️ Failed to render Mermaid diagram $counter, keeping as code"
+                  echo '```' >> "$temp_md"
+                  echo "$mermaid_content" >> "$temp_md"
+                  echo '```' >> "$temp_md"
+                fi
+              elif [[ "$in_mermaid" == true ]]; then
+                mermaid_content+="$line"$'\n'
+              else
+                echo "$line" >> "$temp_md"
+              fi
+            done < "$input_file"
+            
+            cat "$temp_md"
+            rm -f "$temp_md"
+          }
+          
+          #─────────────────────────────────────────────────────────────
           # Preprocess Obsidian Syntax
           #─────────────────────────────────────────────────────────────
-          preprocess() {
-            cat "$1" | \
+          preprocess_obsidian() {
             sed 's/%%[^%]*%%//g' | \
             sed 's/==\([^=]*\)==/<mark>\1<\/mark>/g' | \
             sed 's/\[\[\([^]|]*\)\]\]/**\1**/g' | \
@@ -166,23 +252,37 @@ jobs:
             
             local filename=$(basename "$file" .md)
             local output_path=$(get_output_path "$file" "$preserve_full_path" "$base_path")
+            local file_dir=$(dirname "$file")
+            local temp_processed=$(mktemp)
             
             mkdir -p "$output_path"
             
             echo "📄 $file → $output_path/$filename.pdf"
             
-            if preprocess "$file" | pandoc \
+            # Check if file contains mermaid diagrams
+            if grep -q '```mermaid' "$file"; then
+              echo "   🔍 Found Mermaid diagrams, processing..."
+              process_mermaid "$file" "$file_dir" | preprocess_obsidian > "$temp_processed"
+            else
+              cat "$file" | preprocess_obsidian > "$temp_processed"
+            fi
+            
+            if pandoc "$temp_processed" \
               -o "$output_path/$filename.pdf" \
               --pdf-engine=weasyprint \
               --css="$CSS_FILE" \
               --wrap=none \
               --standalone \
-              --resource-path="$(dirname "$file")" \
+              --resource-path=".:$file_dir:$file_dir/.mermaid_$filename" \
               2>&1; then
               echo "   ✅ Success"
+              rm -f "$temp_processed"
+              rm -rf "$file_dir/.mermaid_$filename"
               return 0
             else
               echo "   ⚠️ Failed"
+              rm -f "$temp_processed"
+              rm -rf "$file_dir/.mermaid_$filename"
               return 1
             fi
           }
@@ -197,12 +297,10 @@ jobs:
             FILES_TO_CONVERT=()
             
             if [[ "$BUILD_MODE" == "full" ]]; then
-              # Get all files matching glob
               shopt -s globstar nullglob
               FILES_TO_CONVERT=( $glob )
               shopt -u globstar nullglob
             else
-              # Get only changed files matching this source
               for changed_file in $CHANGED_FILES; do
                 if [[ -f "$changed_file" ]] && [[ "$changed_file" == $base_path/* ]]; then
                   FILES_TO_CONVERT+=("$changed_file")
@@ -249,7 +347,7 @@ jobs:
           #─────────────────────────────────────────────────────────────
           main() {
             echo "═══════════════════════════════════════════════════════"
-            echo "📚 Markdown to PDF Converter"
+            echo "📚 Markdown to PDF Converter (with Mermaid support)"
             echo "═══════════════════════════════════════════════════════"
             echo ""
             
@@ -272,7 +370,6 @@ jobs:
             echo "═══════════════════════════════════════════════════════"
           }
           
-          # Run
           main
 
       - name: Commit and push PDFs
@@ -281,3 +378,4 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add -f output/
           git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs [skip ci]" && git push)
+          
