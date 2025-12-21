@@ -34,6 +34,14 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
+          
+          # Handle libasound2 package name change in Ubuntu 24.04+
+          if apt-cache show libasound2 &>/dev/null; then
+            ALSA_PKG="libasound2"
+          else
+            ALSA_PKG="libasound2t64"
+          fi
+          
           sudo apt-get install -y \
             pandoc \
             weasyprint \
@@ -51,12 +59,11 @@ jobs:
             libxdamage1 \
             libxrandr2 \
             libgbm1 \
-            libasound2
+            "$ALSA_PKG"
           
           sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
           sudo chmod +x /usr/local/bin/yq
           
-          # Install mermaid-cli for diagram rendering
           npm install -g @mermaid-js/mermaid-cli
 
       - name: Create Mermaid config
@@ -378,4 +385,3 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git add -f output/
           git diff --quiet && git diff --staged --quiet || (git commit -m "📄 Auto-generate PDFs [skip ci]" && git push)
-          
