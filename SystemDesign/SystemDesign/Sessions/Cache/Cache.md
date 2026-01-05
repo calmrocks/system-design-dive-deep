@@ -77,19 +77,21 @@ Target: 80-95% for most applications
 ### Caching Layers (Closest to Farthest from User)
 
 ```mermaid
-block-beta
-    columns 1
-    block:layers
-        L1["1. Client-Side Cache (Browser) ← Fastest"]
-        L2["2. CDN Cache (Edge Locations)"]
-        L3["3. Application Cache (In-Memory)"]
-        L4["4. Distributed Cache (Redis/Memcached)"]
-        L5["5. Database Cache (Query Cache)"]
-        L6["6. Disk Cache ← Slowest"]
-    end
+flowchart TD
+    L1["1. Client-Side Cache - Fastest"]
+    L2["2. CDN Cache"]
+    L3["3. Application Cache"]
+    L4["4. Distributed Cache"]
+    L5["5. Database Cache"]
+    L6["6. Disk Cache - Slowest"]
     
-    style L1 fill:#90EE90
-    style L6 fill:#FFB6C1
+    L1 --> L2
+    L2 --> L3
+    L3 --> L4
+    L4 --> L5
+    L5 --> L6
+```
+```
 ```
 
 ### 1. Client-Side Cache
