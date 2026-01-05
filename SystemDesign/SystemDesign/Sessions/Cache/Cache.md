@@ -78,21 +78,19 @@ Target: 80-95% for most applications
 
 ```mermaid
 flowchart TD
-    L1["1. Client-Side Cache - Fastest"]
-    L2["2. CDN Cache"]
-    L3["3. Application Cache"]
-    L4["4. Distributed Cache"]
-    L5["5. Database Cache"]
-    L6["6. Disk Cache - Slowest"]
+    A[Client Cache - Fastest]:::green --> B[CDN Cache]
+    B --> C[App Cache]
+    C --> D[Redis Cache]
+    D --> E[Database Cache]
+    E --> F[Disk Cache - Slowest]:::red
     
-    L1 --> L2
-    L2 --> L3
-    L3 --> L4
-    L4 --> L5
-    L5 --> L6
+    classDef green fill:#90EE90
+    classDef red fill:#FFB6C1
 ```
-```
-```
+
+
+
+
 
 ### 1. Client-Side Cache
 
@@ -119,6 +117,8 @@ localStorage.setItem('user_preferences', JSON.stringify(data));
 const prefs = JSON.parse(localStorage.getItem('user_preferences'));
 ~~~
 
+> [!question]
+> How to update a data?
 ### 2. CDN Cache
 
 **Content Delivery Network** caches at edge locations worldwide.
@@ -210,11 +210,11 @@ flowchart TB
     Cache[("Cache")]
     DB[("Database")]
     
-    App -->|"1. Check cache"| Cache
-    Cache -->|"2. HIT: Return data"| App
-    Cache -.->|"3. MISS"| DB
-    DB -->|"4. Return data"| App
-    App -->|"5. Write to cache"| Cache
+    App -->|"1 Check cache"| Cache
+    Cache -->|"2 HIT: Return data"| App
+    Cache -.->|"3 MISS"| DB
+    DB -->|"4 Return data"| App
+    App -->|"5 Write to cache"| Cache
 ```
 
 **Implementation:**
