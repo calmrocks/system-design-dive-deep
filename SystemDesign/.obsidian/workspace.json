@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/Sessions/Cache/Cache.md",
+                "file": "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Cache"
+              "title": "Circuit Breaker"
             }
           }
         ]
@@ -188,6 +188,10 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Circuit Breaker/Materials.md",
+    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
+    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
+    "SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/Sessions/Cache/Materials.md",
     "SystemDesign/Sessions/Cache/Discussion Topics.md",
     "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
@@ -195,9 +199,6 @@
     "SystemDesign/Sessions/Message Queue/Materials.md",
     "SystemDesign/Sessions/Load Balancer/Materials.md",
     "SystemDesign/Sessions/Load Balancer/Discussion Topics.md",
-    "SystemDesign/Sessions/Circuit Breaker/Materials.md",
-    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
-    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/Sessions/Circuit Breaker",
     "SystemDesign/Sessions/Distributed Transactions/Materials.md",
     "SystemDesign/Sessions/Distributed Transactions/Discussion Topics.md",
@@ -221,7 +222,6 @@
     "SystemDesign/Sessions/Load Balancer/demos",
     "SystemDesign/Sessions/Cache/demos",
     "SystemDesign/Sessions/Cache.md",
-    "SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/Sessions/Load Balancer",
     "SystemDesign/Sessions/Cache"
   ]
