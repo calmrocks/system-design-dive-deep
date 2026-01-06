@@ -245,6 +245,9 @@ def get_user(user_id):
 - Cache miss penalty (extra latency)
 - Data can become stale
 
+Question: Update data
+
+
 ### 2. Read-Through Cache
 
 **Cache sits between app and database.** Cache manages data loading.
