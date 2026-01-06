@@ -32,12 +32,22 @@ SystemDesign/SystemDesign/
 │   │   ├── Materials.md          # Curated learning resources
 │   │   ├── Discussion Topics.md  # Discussion questions
 │   │   └── demos/                # Code examples and POCs
-│   └── Load Balancer/
-│       ├── Load Balancer.md
-│       ├── Materials.md
-│       ├── Discussion Topics.md
-│       └── demos/
+│   └── [Other Topics]/
+│       └── ...
 ```
+
+## 📚 Session Topics
+
+| Topic | Duration | Level | Key Concepts | Discussion Focus | Future Learning |
+|-------|----------|-------|--------------|------------------|-----------------|
+| **[Cache](SystemDesign/SystemDesign/Sessions/Cache/Cache.md)** | 60 min | Intermediate | Cache layers, eviction policies (LRU/LFU), write strategies (write-through/write-back), cache invalidation | Cache hit ratio optimization, thundering herd problem, cache warming strategies | Redis Cluster, distributed caching, cache-aside vs read-through patterns |
+| **[Load Balancer](SystemDesign/SystemDesign/Sessions/Load%20Balancer/Load%20Balancer.md)** | 60 min | Intermediate | L4 vs L7 load balancing, algorithms (round-robin, least connections, IP hash), health checks | Sticky sessions trade-offs, SSL termination, zero-downtime deployments | Service mesh (Istio/Envoy), global load balancing, auto-scaling integration |
+| **[Circuit Breaker](SystemDesign/SystemDesign/Sessions/Circuit%20Breaker/Circuit%20Breaker.md)** | 60 min | Intermediate-Advanced | State machine (closed/open/half-open), bulkhead pattern, retry with backoff, timeouts | Cascading failure prevention, fallback strategies, graceful degradation | Resilience4j, Hystrix patterns, chaos engineering |
+| **[Consistent Hashing](SystemDesign/SystemDesign/Sessions/Consistent%20Hashing/Consistent%20Hashing.md)** | 60 min | Intermediate | Hash ring, virtual nodes, key redistribution, replication | Hotspot mitigation, node failure handling, rebalancing strategies | DynamoDB partitioning, Cassandra ring, jump consistent hashing |
+| **[Distributed Transactions](SystemDesign/SystemDesign/Sessions/Distributed%20Transactions/Distributed%20Transactions.md)** | 60 min | Intermediate-Advanced | 2PC/3PC, Saga pattern, compensation, outbox pattern, eventual consistency | CAP theorem trade-offs, idempotency, transaction boundaries | Event sourcing, CQRS, distributed consensus (Raft/Paxos) |
+| **[Message Queue](SystemDesign/SystemDesign/Sessions/Message%20Queue/Message%20Queue.md)** | 60 min | Intermediate | Kafka vs RabbitMQ vs SQS, pub/sub patterns, event-driven architecture, choreography vs orchestration | Message ordering, exactly-once delivery, dead letter queues | Event sourcing, CQRS, stream processing (Kafka Streams/Flink) |
+| **[Rate Limiter](SystemDesign/SystemDesign/Sessions/Rate%20Limiter/Rate%20Limiter.md)** | 60 min | Intermediate | Token bucket, leaky bucket, sliding window, distributed rate limiting | Algorithm selection, burst handling, multi-tier limits | API gateway rate limiting, adaptive throttling, quota management |
+| **[Service Discovery](SystemDesign/SystemDesign/Sessions/Service%20Discovery/Service%20Discovery.md)** | 60 min | Intermediate | Client-side vs server-side discovery, service registry (Consul/etcd/ZooKeeper), health checking, DNS-based discovery | Registration patterns, failure detection, service mesh integration | Kubernetes service discovery, Envoy xDS, multi-cluster discovery |
 
 ### Navigation Tips
 
