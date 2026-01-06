@@ -706,6 +706,150 @@ product:456:inventory       - Product inventory
 api:v1:users:list:page:1    - API response
 ~~~
 
+#### 2. Cache Key Design Considerations
+
+Choosing the right cache key is critical for cache effectiveness. Poor key design leads to low hit rates, memory waste, and debugging nightmares.
+
+**Key Design Principles:**
+
+```mermaid
+mindmap
+  root((Cache Key Design))
+    Uniqueness
+      Avoid collisions
+      Include all identifying attributes
+      Consider multi-tenancy
+    Predictability
+      Deterministic generation
+      Same input = same key
+      Easy to reconstruct
+    Readability
+      Human-readable format
+      Easy debugging
+      Clear hierarchy
+    Size
+      Keep keys short
+      Avoid redundant prefixes
+      Balance readability vs size
+```
+
+**Common Pitfalls & Solutions:**
+
+| Pitfall | Problem | Solution |
+|---------|---------|----------|
+| Missing context | `user:123` cached differently per tenant | Include tenant: `tenant:abc:user:123` |
+| Query parameter order | `?a=1&b=2` vs `?b=2&a=1` different keys | Sort parameters before hashing |
+| Case sensitivity | `User:123` vs `user:123` collision | Normalize to lowercase |
+| Locale/timezone | Same data, different representations | Include locale: `user:123:en-US` |
+| Version mismatch | Old cached data after schema change | Include version: `v2:user:123` |
+
+**Key Generation Strategies:**
+
+~~~python
+import hashlib
+import json
+
+# Strategy 1: Hierarchical Keys (Recommended for simple cases)
+def simple_key(resource, identifier, *attributes):
+    """
+    user:123:profile
+    product:456:reviews:page:1
+    """
+    parts = [resource, str(identifier)] + list(attributes)
+    return ":".join(parts)
+
+# Strategy 2: Hash-based Keys (For complex queries)
+def query_key(endpoint, params):
+    """
+    For API responses with many parameters
+    Produces: api:users:a1b2c3d4e5f6
+    """
+    # Sort params for consistency
+    sorted_params = json.dumps(params, sort_keys=True)
+    hash_value = hashlib.md5(sorted_params.encode()).hexdigest()[:12]
+    return f"api:{endpoint}:{hash_value}"
+
+# Strategy 3: Composite Keys (For multi-dimensional lookups)
+def composite_key(tenant_id, user_id, resource, **filters):
+    """
+    tenant:abc:user:123:orders:status:pending:page:1
+    """
+    base = f"tenant:{tenant_id}:user:{user_id}:{resource}"
+    filter_parts = [f"{k}:{v}" for k, v in sorted(filters.items())]
+    return ":".join([base] + filter_parts)
+
+# Usage examples
+key1 = simple_key("user", 123, "profile")
+# → "user:123:profile"
+
+key2 = query_key("search", {"q": "redis", "page": 1, "sort": "date"})
+# → "api:search:a1b2c3d4e5f6"
+
+key3 = composite_key("acme", 123, "orders", status="pending", page=1)
+# → "tenant:acme:user:123:orders:page:1:status:pending"
+~~~
+
+**Multi-Tenancy Considerations:**
+
+~~~python
+class TenantAwareCache:
+    def __init__(self, redis_client):
+        self.redis = redis_client
+    
+    def _build_key(self, tenant_id, key):
+        """Always prefix with tenant to prevent data leakage"""
+        return f"tenant:{tenant_id}:{key}"
+    
+    def get(self, tenant_id, key):
+        full_key = self._build_key(tenant_id, key)
+        return self.redis.get(full_key)
+    
+    def set(self, tenant_id, key, value, ttl=3600):
+        full_key = self._build_key(tenant_id, key)
+        self.redis.setex(full_key, ttl, value)
+    
+    def invalidate_tenant(self, tenant_id):
+        """Invalidate all cache for a tenant"""
+        pattern = f"tenant:{tenant_id}:*"
+        keys = self.redis.keys(pattern)
+        if keys:
+            self.redis.delete(*keys)
+~~~
+
+**Key Size Optimization:**
+
+~~~python
+# ❌ Bad: Verbose keys waste memory
+"application:production:service:user-service:cache:user:profile:id:123:version:2"
+
+# ✅ Good: Concise but readable
+"prod:usr:123:profile:v2"
+
+# Key size impact calculation
+key_size = 50  # bytes average
+num_keys = 10_000_000  # 10M keys
+overhead = key_size * num_keys / (1024**3)  # ~0.47 GB just for keys!
+~~~
+
+**Debugging-Friendly Keys:**
+
+~~~python
+# Include metadata for debugging (development only)
+def debug_key(resource, identifier, **metadata):
+    """
+    Creates keys with debug info in development
+    Production: user:123
+    Development: user:123#created:1704067200#source:api
+    """
+    base_key = f"{resource}:{identifier}"
+    
+    if settings.DEBUG:
+        meta_parts = [f"{k}:{v}" for k, v in metadata.items()]
+        return f"{base_key}#{'#'.join(meta_parts)}"
+    
+    return base_key
+~~~
+
 #### 2. TTL Strategy
 
 ~~~python
