@@ -63,12 +63,12 @@ Target: 80-95% for most applications
 
 ### Key Metrics
 
-| Metric | Description | Good Target |
-|--------|-------------|-------------|
-| **Hit Ratio** | Percentage of requests served from cache | > 80% |
-| **Latency** | Time to retrieve from cache | < 10ms |
-| **TTL** | Time data stays in cache | Depends on use case |
-| **Memory Usage** | Cache size vs available memory | < 80% of allocated |
+| Metric           | Description                              | Good Target         |
+| ---------------- | ---------------------------------------- | ------------------- |
+| **Hit Ratio**    | Percentage of requests served from cache | > 80%               |
+| **Latency**      | Time to retrieve from cache              | < 10ms              |
+| **TTL**          | Time data stays in cache                 | Depends on use case |
+| **Memory Usage** | Cache size vs available memory           | < 80% of allocated  |
 
 ---
 
