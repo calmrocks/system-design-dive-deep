@@ -2,21 +2,21 @@
 
 ## Session Overview
 
-| Attribute | Details |
-|-----------|---------|
-| Duration | 60 minutes |
-| Level | Intermediate to Advanced |
+| Attribute     | Details                                            |
+| ------------- | -------------------------------------------------- |
+| Duration      | 60 minutes                                         |
+| Level         | Intermediate to Advanced                           |
 | Prerequisites | Microservices basics, distributed systems concepts |
 
 ## Agenda
 
-| Time | Topic |
-|------|-------|
-| 0-5 min | Introduction & Why Resilience Matters |
-| 5-20 min | Circuit Breaker Pattern Deep Dive |
-| 20-35 min | Bulkhead, Retry & Timeout Patterns |
+| Time      | Topic                                      |
+| --------- | ------------------------------------------ |
+| 0-5 min   | Introduction & Why Resilience Matters      |
+| 5-20 min  | Circuit Breaker Pattern Deep Dive          |
+| 20-35 min | Bulkhead, Retry & Timeout Patterns         |
 | 35-50 min | Fallback Strategies & Graceful Degradation |
-| 50-60 min | Practical Exercise & Discussion |
+| 50-60 min | Practical Exercise & Discussion            |
 
 ## Learning Objectives
 

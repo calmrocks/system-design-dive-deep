@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/README.md",
+                "file": "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "README"
+              "title": "Circuit Breaker"
             }
           }
         ]
@@ -188,13 +188,13 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
-    "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
+    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
+    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/README.md",
+    "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/SystemDesign/Sessions/Cache",
     "SystemDesign/SystemDesign/Sessions",
     "SystemDesign/SystemDesign",
-    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
-    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
     "SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/Sessions/Circuit Breaker/Materials.md",
     "SystemDesign/Sessions/Cache/Materials.md",
