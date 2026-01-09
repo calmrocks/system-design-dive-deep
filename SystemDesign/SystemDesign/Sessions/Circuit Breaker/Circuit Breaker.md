@@ -410,7 +410,7 @@ flowchart TB
         Note1["If C is slow, all 100 threads<br/>get stuck waiting for C!"]
     end
     
-    subgraph With["With Bulkhead"]
+    subgraph With["With Bulkhead"] 
         PA["Pool A<br/>(30 threads)"]
         PB["Pool B<br/>(30 threads)"]
         PC["Pool C<br/>(40 threads)"]
