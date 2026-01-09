@@ -188,9 +188,11 @@
   },
   "active": "497937d520d179da",
   "lastOpenFiles": [
-    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
-    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
+    "SystemDesign/Prompts.md",
     "SystemDesign/README.md",
+    "README.md",
+    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
+    "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/SystemDesign/Sessions/Cache",
     "SystemDesign/SystemDesign/Sessions",
@@ -219,9 +221,7 @@
     "SystemDesign/Sessions/Rate Limiter",
     "SystemDesign/Sessions/Consistent Hashing/Materials.md",
     "SystemDesign/Sessions/Consistent Hashing/Discussion Topics.md",
-    "SystemDesign/Sessions/Consistent Hashing/Consistent Hashing.md",
     "SystemDesign/Sessions/Consistent Hashing",
-    "SystemDesign/Sessions/Message Queue/Discussion Topics.md",
     "SystemDesign/Sessions/Message Queue",
     "SystemDesign/Sessions/Load Balancer/demos"
   ]
