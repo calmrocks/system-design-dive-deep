@@ -11,10 +11,12 @@
             "id": "34d74ca05dfe3e39",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "New tab"
+              "type": "release-notes",
+              "state": {
+                "currentVersion": "1.11.4"
+              },
+              "icon": "lucide-book-up",
+              "title": "Release Notes 1.11.4"
             }
           }
         ]
@@ -182,7 +184,7 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "ea33e1b449338732",
+  "active": "34d74ca05dfe3e39",
   "lastOpenFiles": [
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/README.md",
