@@ -4,19 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "004c2fb92e5532a8",
+        "id": "000ce772fec9f0da",
         "type": "tabs",
         "children": [
           {
-            "id": "34d74ca05dfe3e39",
+            "id": "a4f60b555efc7c8f",
             "type": "leaf",
             "state": {
-              "type": "release-notes",
-              "state": {
-                "currentVersion": "1.11.4"
-              },
-              "icon": "lucide-book-up",
-              "title": "Release Notes 1.11.4"
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
             }
           }
         ]
@@ -184,7 +182,7 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "34d74ca05dfe3e39",
+  "active": "a4f60b555efc7c8f",
   "lastOpenFiles": [
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/README.md",
