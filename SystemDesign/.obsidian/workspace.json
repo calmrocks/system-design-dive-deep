@@ -4,21 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "7bf943d464706a25",
+        "id": "004c2fb92e5532a8",
         "type": "tabs",
         "children": [
           {
-            "id": "497937d520d179da",
+            "id": "34d74ca05dfe3e39",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SystemDesign/README.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "README"
+              "title": "New tab"
             }
           }
         ]
@@ -186,7 +182,7 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "497937d520d179da",
+  "active": "ea33e1b449338732",
   "lastOpenFiles": [
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/README.md",
