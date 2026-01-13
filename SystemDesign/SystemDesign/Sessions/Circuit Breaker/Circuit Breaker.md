@@ -724,14 +724,14 @@ sequenceDiagram
 
 ### Timeout Guidelines
 
-| Dependency Type | Connection Timeout | Read Timeout | Notes |
-|-----------------|-------------------|--------------|-------|
-| Internal Microservices | 100-500ms | 1-3 seconds | Low latency expected |
-| External APIs | 1-2 seconds | 5-30 seconds | Variable latency |
-| Databases | 1-2 seconds | 5-30 seconds | Query complexity varies |
-| Cache (Redis/Memcached) | 100-200ms | 500ms-1s | Should be very fast |
-| Message Queues | 1 second | 5-10 seconds | Message size dependent |
-| File Storage (S3) | 1-2 seconds | 30-60 seconds | File size dependent |
+| Dependency Type         | Connection Timeout | Read Timeout  | Notes                   |
+| ----------------------- | ------------------ | ------------- | ----------------------- |
+| Internal Microservices  | 100-500ms          | 1-3 seconds   | Low latency expected    |
+| External APIs           | 1-2 seconds        | 5-30 seconds  | Variable latency        |
+| Databases               | 1-2 seconds        | 5-30 seconds  | Query complexity varies |
+| Cache (Redis/Memcached) | 100-200ms          | 500ms-1s      | Should be very fast     |
+| Message Queues          | 1 second           | 5-10 seconds  | Message size dependent  |
+| File Storage (S3)       | 1-2 seconds        | 30-60 seconds | File size dependent     |
 
 ### The Timeout Calculation Problem
 
