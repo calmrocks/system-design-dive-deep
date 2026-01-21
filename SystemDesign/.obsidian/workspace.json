@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
+                "file": "SystemDesign/Sessions/Rate Limiter/Rate Limiter 1.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Circuit Breaker"
+              "title": "Rate Limiter 1"
             }
           }
         ]
@@ -188,11 +188,14 @@
   },
   "active": "a4f60b555efc7c8f",
   "lastOpenFiles": [
+    "SystemDesign/Sessions/Rate Limiter/Materials.md",
+    "SystemDesign/Sessions/Rate Limiter/Rate Limiter 1.md",
+    "SystemDesign/Sessions/Rate Limiter/Rate Limiter.md",
+    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/README.md",
     "SystemDesign/Prompts.md",
     "README.md",
-    "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/Sessions/Circuit Breaker/Discussion Topics.md",
     "SystemDesign/SystemDesign/Sessions/Cache",
     "SystemDesign/SystemDesign/Sessions",
@@ -215,12 +218,9 @@
     "SystemDesign/Sessions/Service Discovery/Discussion Topics.md",
     "SystemDesign/Sessions/Service Discovery/Service Discovery.md",
     "SystemDesign/Sessions/Service Discovery",
-    "SystemDesign/Sessions/Rate Limiter/Materials.md",
     "SystemDesign/Sessions/Rate Limiter/Discussion Topics.md",
-    "SystemDesign/Sessions/Rate Limiter/Rate Limiter.md",
     "SystemDesign/Sessions/Rate Limiter",
     "SystemDesign/Sessions/Consistent Hashing/Materials.md",
-    "SystemDesign/Sessions/Consistent Hashing/Discussion Topics.md",
     "SystemDesign/Sessions/Consistent Hashing",
     "SystemDesign/Sessions/Message Queue",
     "SystemDesign/Sessions/Load Balancer/demos"
