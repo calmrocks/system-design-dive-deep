@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "SystemDesign/Sessions/Rate Limiter/Rate Limiter 1.md",
+                "file": "SystemDesign/Sessions/Distributed Transactions/Distributed Transactions.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Rate Limiter 1"
+              "title": "Distributed Transactions"
             }
           }
         ]
@@ -188,8 +188,8 @@
   },
   "active": "a4f60b555efc7c8f",
   "lastOpenFiles": [
-    "SystemDesign/Sessions/Rate Limiter/Materials.md",
     "SystemDesign/Sessions/Rate Limiter/Rate Limiter 1.md",
+    "SystemDesign/Sessions/Rate Limiter/Materials.md",
     "SystemDesign/Sessions/Rate Limiter/Rate Limiter.md",
     "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
