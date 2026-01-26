@@ -2,21 +2,21 @@
 
 ## Session Overview
 
-| Attribute | Details |
-|-----------|---------|
-| Duration | 60 minutes |
-| Level | Intermediate to Advanced |
+| Attribute     | Details                                     |
+| ------------- | ------------------------------------------- |
+| Duration      | 60 minutes                                  |
+| Level         | Intermediate to Advanced                    |
 | Prerequisites | Database fundamentals, microservices basics |
 
 ## Agenda
 
-| Time | Topic |
-|------|-------|
-| 0-5 min | Introduction & ACID in distributed systems |
-| 5-20 min | Two-Phase Commit (2PC) & Three-Phase Commit (3PC) |
-| 20-35 min | Saga Pattern & Compensation |
-| 35-50 min | Eventual Consistency & Outbox Pattern |
-| 50-60 min | Practical Exercise & Discussion |
+| Time      | Topic                                             |
+| --------- | ------------------------------------------------- |
+| 0-5 min   | Introduction & ACID in distributed systems        |
+| 5-20 min  | Two-Phase Commit (2PC) & Three-Phase Commit (3PC) |
+| 20-35 min | Saga Pattern & Compensation                       |
+| 35-50 min | Eventual Consistency & Outbox Pattern             |
+| 50-60 min | Practical Exercise & Discussion                   |
 
 ## Learning Objectives
 

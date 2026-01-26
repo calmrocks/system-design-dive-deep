@@ -1321,4 +1321,3 @@ flowchart TB
 | **Related** | Circuit Breaker, Bulkhead, Load Shedding |
 | **Monitor** | Rejection rate, top clients, latency |
 | **Pitfalls** | Uniform limits, no headers, wrong order, distributed state |
-````
