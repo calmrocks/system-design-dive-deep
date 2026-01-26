@@ -631,12 +631,12 @@ flowchart TB
 ```mermaid
 flowchart LR
     subgraph "Sliding Window Counter"
-        Prev[Previous Window\nCount: 80]
-        Curr[Current Window\nCount: 30]
+        Prev["Previous Window<br>Count: 80"]
+        Curr["Current Window<br>Count: 30"]
         
-        Calc["Weighted Calculation:\n80 × 0.25 + 30 × 0.75 = 42.5\n25% into current window"]
+        Calc["Weighted Calculation:<br>80 × 0.25 + 30 × 0.75 = 42.5<br>25% into current window"]
         
-        Result["Estimated count: 42\nLimit: 100\nResult: ALLOWED"]
+        Result["Estimated count: 42<br>Limit: 100<br>Result: ALLOWED"]
     end
     
     Prev --> Calc
@@ -683,15 +683,15 @@ flowchart LR
 
 ### ✅ When to Use Rate Limiting
 
-| Scenario | Reasoning |
-|----------|-----------|
-| **Public APIs** | Protect from abuse, ensure fair access |
-| **Authentication endpoints** | Prevent brute force attacks |
-| **Resource-intensive operations** | Protect expensive backend processes |
-| **Multi-tenant systems** | Ensure tenant isolation |
-| **Third-party integrations** | Match upstream rate limits |
-| **Webhooks/Callbacks** | Control outbound request rates |
-| **Mobile/IoT backends** | Handle potentially buggy clients |
+| Scenario                          | Reasoning                              |
+| --------------------------------- | -------------------------------------- |
+| **Public APIs**                   | Protect from abuse, ensure fair access |
+| **Authentication endpoints**      | Prevent brute force attacks            |
+| **Resource-intensive operations** | Protect expensive backend processes    |
+| **Multi-tenant systems**          | Ensure tenant isolation                |
+| **Third-party integrations**      | Match upstream rate limits             |
+| **Webhooks/Callbacks**            | Control outbound request rates         |
+| **Mobile/IoT backends**           | Handle potentially buggy clients       |
 
 **Decision Criteria:**
 
@@ -719,14 +719,14 @@ flowchart TB
 
 ### ❌ When NOT to Use Rate Limiting
 
-| Scenario | Reasoning |
-|----------|-----------|
-| **Internal service-to-service calls** | Use circuit breakers instead (usually) |
-| **Health check endpoints** | Should always respond for monitoring |
-| **Emergency/admin operations** | Need guaranteed access |
-| **Real-time critical paths** | Latency of checking may be unacceptable |
-| **Already-throttled upstream** | Redundant limiting adds overhead |
-| **Static content behind CDN** | CDN handles this better |
+| Scenario                              | Reasoning                               |
+| ------------------------------------- | --------------------------------------- |
+| **Internal service-to-service calls** | Use circuit breakers instead (usually)  |
+| **Health check endpoints**            | Should always respond for monitoring    |
+| **Emergency/admin operations**        | Need guaranteed access                  |
+| **Real-time critical paths**          | Latency of checking may be unacceptable |
+| **Already-throttled upstream**        | Redundant limiting adds overhead        |
+| **Static content behind CDN**         | CDN handles this better                 |
 
 **Anti-Patterns:**
 
