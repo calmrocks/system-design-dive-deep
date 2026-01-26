@@ -49,23 +49,24 @@ Distributed (Hard):
 ### CAP Theorem: The Fundamental Trade-off
 
 ~~~mermaid
-flowchart TB
-    subgraph CAP["CAP Theorem: Pick Two"]
-        C["Consistency<br/>All nodes see same data"]
-        A["Availability<br/>System always responds"]
-        P["Partition Tolerance<br/>Works despite network splits"]
+flowchart TD
+    subgraph CAP["CAP: Pick Two"]
+        direction TB
+        C["C: Consistency"] --- A["A: Availability"]
+        A --- P["P: Partition Tolerance"]
+        P --- C
     end
     
-    C ---|"CA: Single DB<br/>(not distributed)"| A
-    A ---|"AP: Saga, Eventual<br/>(may have stale reads)"| P
-    P ---|"CP: 2PC, Locks<br/>(blocks during partition)"| C
+    C -.- CP["CP: 2PC, Locks"]
+    A -.- CA["CA: Single DB"]
+    P -.- AP["AP: Saga"]
 ~~~
 
-| Choice | What You Get | What You Sacrifice | Example |
-|--------|--------------|-------------------|---------|
-| CP | Strong consistency | Availability during partitions | 2PC, distributed locks |
-| AP | High availability | Immediate consistency | Saga, eventual consistency |
-| CA | Both C and A | Not truly distributed | Single PostgreSQL |
+| Choice | What You Get       | What You Sacrifice             | Example                    |
+| ------ | ------------------ | ------------------------------ | -------------------------- |
+| CP     | Strong consistency | Availability during partitions | 2PC, distributed locks     |
+| AP     | High availability  | Immediate consistency          | Saga, eventual consistency |
+| CA     | Both C and A       | Not truly distributed          | Single PostgreSQL          |
 
 > **Reality:** Network partitions WILL happen → You must choose between C and A
 
@@ -417,7 +418,7 @@ stateDiagram-v2
 
 ### The Dual Write Problem
 
-```mermaid
+~~~mermaid
 flowchart LR
     S["Service"] -->|"1. Write DB ✓"| DB[(Database)]
     S -->|"2. Publish Event ✗"| MQ[Message Broker]
@@ -441,7 +442,7 @@ Failure scenarios:
 
 ### Transactional Outbox Pattern
 
-```mermaid
+~~~mermaid
 flowchart TB
     S["Service"] --> TX
     
@@ -536,7 +537,7 @@ Solution: Track processed message IDs
 
 ### Decision Matrix
 
-```mermaid
+~~~mermaid
 flowchart TB
     START["Need distributed transaction?"] --> Q1{"Strong consistency<br/>required?"}
     
