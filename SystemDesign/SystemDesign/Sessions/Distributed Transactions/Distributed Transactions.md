@@ -1,407 +1,415 @@
-# Distributed Transactions
+# Distributed Transactions: Architecture Guide
 
-## Session Overview
+## Overview
 
-| Attribute     | Details                                     |
-| ------------- | ------------------------------------------- |
-| Duration      | 60 minutes                                  |
-| Level         | Intermediate to Advanced                    |
+| Attribute | Details |
+|-----------|---------|
+| Duration | 60 minutes |
+| Level | Intermediate to Advanced |
 | Prerequisites | Database fundamentals, microservices basics |
-
-## Agenda
-
-| Time      | Topic                                             |
-| --------- | ------------------------------------------------- |
-| 0-5 min   | Introduction & ACID in distributed systems        |
-| 5-20 min  | Two-Phase Commit (2PC) & Three-Phase Commit (3PC) |
-| 20-35 min | Saga Pattern & Compensation                       |
-| 35-50 min | Eventual Consistency & Outbox Pattern             |
-| 50-60 min | Practical Exercise & Discussion                   |
 
 ## Learning Objectives
 
-By the end of this session, you will be able to:
-- Understand the challenges of transactions across distributed systems
-- Compare 2PC, 3PC, and Saga patterns with their trade-offs
-- Design compensation strategies for failed transactions
-- Implement eventual consistency patterns in microservices
-- Choose the right transaction pattern for different use cases
+- Understand why distributed transactions are fundamentally hard
+- Compare 2PC, 3PC, Saga, and Eventual Consistency patterns
+- Make informed architectural trade-offs for your use case
+- Design compensation and recovery strategies
+- Handle edge cases and failure scenarios
 
 ---
 
 ## 1. The Distributed Transaction Challenge
 
-### Why Distributed Transactions Are Hard
+### Why It's Fundamentally Hard
 
-```mermaid
+~~~
+Monolithic (Easy):
+┌─────────────────────────────────────────┐
+│            Single Database              │
+│  BEGIN TRANSACTION                      │
+│    UPDATE accounts SET balance -= 100   │
+│    UPDATE accounts SET balance += 100   │
+│  COMMIT                                 │
+└─────────────────────────────────────────┘
+         ↑ ACID guaranteed by DB
+
+Distributed (Hard):
+┌──────────┐    ┌──────────┐    ┌──────────┐
+│  Order   │    │ Payment  │    │Inventory │
+│   DB1    │───▶│   DB2    │───▶│   DB3    │
+└──────────┘    └──────────┘    └──────────┘
+         ↑ No single authority to guarantee ACID
+~~~
+
+**Core Questions:**
+- What if Payment succeeds but Inventory fails?
+- What if network partitions during commit?
+- What if a service crashes mid-transaction?
+
+### CAP Theorem: The Fundamental Trade-off
+
+~~~mermaid
 flowchart TB
-    subgraph Monolithic["Monolithic Transaction (Single Database = Easy)"]
-        direction TB
-        TX["BEGIN TRANSACTION<br/>UPDATE accounts SET balance = balance - 100<br/>UPDATE accounts SET balance = balance + 100<br/>COMMIT"]
-    end
-```
-
-```mermaid
-flowchart LR
-    subgraph Distributed["Distributed Transaction"]
-        direction LR
-        OS["Order Service<br/>(DB1)"] --> PS["Payment Service<br/>(DB2)"]
-        PS --> IS["Inventory Service<br/>(DB3)"]
+    subgraph CAP["CAP Theorem: Pick Two"]
+        C["Consistency<br/>All nodes see same data"]
+        A["Availability<br/>System always responds"]
+        P["Partition Tolerance<br/>Works despite network splits"]
     end
     
-    Q["❓ What if Payment succeeds but Inventory fails?"]
-```
+    C ---|"CA: Single DB<br/>(not distributed)"| A
+    A ---|"AP: Saga, Eventual<br/>(may have stale reads)"| P
+    P ---|"CP: 2PC, Locks<br/>(blocks during partition)"| C
+~~~
 
-### CAP Theorem Implications
+| Choice | What You Get | What You Sacrifice | Example |
+|--------|--------------|-------------------|---------|
+| CP | Strong consistency | Availability during partitions | 2PC, distributed locks |
+| AP | High availability | Immediate consistency | Saga, eventual consistency |
+| CA | Both C and A | Not truly distributed | Single PostgreSQL |
 
-| Property | Description | Impact on Transactions |
-|----------|-------------|----------------------|
-| Consistency | All nodes see same data | Strong consistency = blocking |
-| Availability | System always responds | May return stale data |
-| Partition Tolerance | Works despite network splits | Must choose C or A |
+> **Reality:** Network partitions WILL happen → You must choose between C and A
 
 ---
 
 ## 2. Two-Phase Commit (2PC)
 
-### How 2PC Works
+### How It Works
 
-```mermaid
+~~~mermaid
 sequenceDiagram
-    box Phase 1: PREPARE (Voting)
-    participant C as Coordinator
-    participant A as Node A
-    participant B as Node B
-    participant D as Node C
+    participant CO as Coordinator
+    participant A as Participant A
+    participant B as Participant B
+    participant C as Participant C
+    
+    rect rgb(230, 240, 255)
+    Note over CO,C: Phase 1: PREPARE (Voting)
+    CO->>A: PREPARE
+    CO->>B: PREPARE
+    CO->>C: PREPARE
+    A-->>CO: YES (locks held)
+    B-->>CO: YES (locks held)
+    C-->>CO: YES (locks held)
     end
     
-    C->>A: PREPARE
-    C->>B: PREPARE
-    C->>D: PREPARE
-    A-->>C: YES
-    B-->>C: YES
-    D-->>C: YES
+    Note over CO: All YES → Decision: COMMIT
     
-    Note over C: All voted YES → COMMIT
-    
-    rect rgb(200, 230, 200)
-    Note over C,D: Phase 2: COMMIT (Decision)
-    C->>A: COMMIT
-    C->>B: COMMIT
-    C->>D: COMMIT
-    A-->>C: ACK
-    B-->>C: ACK
-    D-->>C: ACK
+    rect rgb(220, 255, 220)
+    Note over CO,C: Phase 2: COMMIT
+    CO->>A: COMMIT
+    CO->>B: COMMIT
+    CO->>C: COMMIT
+    A-->>CO: ACK (locks released)
+    B-->>CO: ACK (locks released)
+    C-->>CO: ACK (locks released)
     end
-```
+~~~
 
-### 2PC Implementation Example
+### 2PC State Machine
 
-```java
-public class TwoPhaseCommitCoordinator {
-    private final List<TransactionParticipant> participants;
-    private final TransactionLog transactionLog;
-    
-    public boolean executeTransaction(Transaction tx) {
-        String txId = tx.getId();
-        
-        // Phase 1: Prepare
-        transactionLog.logPrepare(txId);
-        List<Boolean> votes = new ArrayList<>();
-        
-        for (TransactionParticipant participant : participants) {
-            try {
-                boolean vote = participant.prepare(tx);
-                votes.add(vote);
-                
-                if (!vote) {
-                    // Any NO vote → abort
-                    return abort(txId);
-                }
-            } catch (Exception e) {
-                // Timeout or failure → abort
-                return abort(txId);
-            }
-        }
-        
-        // Phase 2: Commit (all voted YES)
-        transactionLog.logCommit(txId);
-        
-        for (TransactionParticipant participant : participants) {
-            try {
-                participant.commit(txId);
-            } catch (Exception e) {
-                // Must retry until success (commit is durable)
-                retryCommit(participant, txId);
-            }
-        }
-        
-        return true;
-    }
-    
-    private boolean abort(String txId) {
-        transactionLog.logAbort(txId);
-        
-        for (TransactionParticipant participant : participants) {
-            try {
-                participant.rollback(txId);
-            } catch (Exception e) {
-                // Retry rollback
-                retryRollback(participant, txId);
-            }
-        }
-        
-        return false;
-    }
-}
+~~~
+Coordinator States:
+    INIT → WAITING → COMMITTED/ABORTED
 
-public interface TransactionParticipant {
-    boolean prepare(Transaction tx);  // Returns YES/NO vote
-    void commit(String txId);
-    void rollback(String txId);
-}
-```
+Participant States:
+    INIT → PREPARED → COMMITTED/ABORTED
+              ↑
+         Locks held here (blocking!)
+~~~
 
-### 2PC Problems
+### Critical Problems with 2PC
 
-| Problem | Description | Impact |
-|---------|-------------|--------|
-| Blocking | Participants hold locks during voting | Reduced throughput |
-| Coordinator Failure | Single point of failure | Participants stuck in uncertain state |
-| Network Partition | Can't reach consensus | Transaction hangs |
+| Problem | Scenario | Impact |
+|---------|----------|--------|
+| **Blocking** | Participants hold locks during voting | Throughput drops, deadlock risk |
+| **Coordinator SPOF** | Coordinator crashes after PREPARE | Participants stuck indefinitely |
+| **Network Partition** | Can't reach all participants | Transaction hangs |
+| **Latency** | 2 round trips minimum | Not suitable for high-frequency |
+
+### Edge Cases & Failure Scenarios
+
+~~~
+Scenario 1: Coordinator fails after sending PREPARE
+┌─────────────────────────────────────────────────────┐
+│  Coordinator: PREPARE sent → CRASH                  │
+│  Participant A: PREPARED (holding locks)            │
+│  Participant B: PREPARED (holding locks)            │
+│                                                     │
+│  Result: Both participants BLOCKED indefinitely     │
+│  Solution: Timeout + new coordinator election       │
+│            But may cause inconsistency!             │
+└─────────────────────────────────────────────────────┘
+
+Scenario 2: Participant fails after voting YES
+┌─────────────────────────────────────────────────────┐
+│  Participant A: YES → CRASH → RECOVERS              │
+│                                                     │
+│  On recovery, must:                                 │
+│  1. Check transaction log                           │
+│  2. Ask coordinator for decision                    │
+│  3. If coordinator also crashed → UNCERTAIN STATE   │
+└─────────────────────────────────────────────────────┘
+
+Scenario 3: Network partition during Phase 2
+┌─────────────────────────────────────────────────────┐
+│  Coordinator: Sends COMMIT                          │
+│  Participant A: Receives COMMIT ✓                   │
+│  Participant B: Network timeout ✗                   │
+│                                                     │
+│  Result: A committed, B uncertain                   │
+│  Must retry COMMIT to B until success               │
+└─────────────────────────────────────────────────────┘
+~~~
+
+### When to Use 2PC
+
+| ✅ Good Fit | ❌ Poor Fit |
+|------------|-------------|
+| Financial systems requiring strong consistency | High-throughput systems |
+| Small number of participants (2-3) | Many microservices |
+| Low-latency network (same datacenter) | Cross-region deployments |
+| Batch processing jobs | User-facing real-time APIs |
 
 ---
 
 ## 3. Three-Phase Commit (3PC)
 
-### 3PC Adds Pre-Commit Phase
+### Improvement Over 2PC
 
-```mermaid
+~~~mermaid
 sequenceDiagram
-    participant C as Coordinator
+    participant CO as Coordinator
     participant P as Participants
     
     rect rgb(230, 240, 255)
-    Note over C,P: Phase 1: CAN-COMMIT (Query)
-    C->>P: Can you commit?
-    P-->>C: YES/NO
+    Note over CO,P: Phase 1: CAN-COMMIT
+    CO->>P: Can you commit?
+    P-->>CO: YES/NO
     end
     
     rect rgb(255, 245, 220)
-    Note over C,P: Phase 2: PRE-COMMIT (Prepare)
-    C->>P: Prepare to commit
-    P-->>C: ACK
-    Note over P: Can now commit on timeout
+    Note over CO,P: Phase 2: PRE-COMMIT
+    CO->>P: Prepare to commit
+    P-->>CO: ACK
+    Note over P: Key: Can commit on timeout!
     end
     
     rect rgb(220, 255, 220)
-    Note over C,P: Phase 3: DO-COMMIT (Commit)
-    C->>P: Commit
-    P-->>C: Done
+    Note over CO,P: Phase 3: DO-COMMIT
+    CO->>P: Commit now
+    P-->>CO: Done
     end
-```
+~~~
 
-### 2PC vs 3PC Comparison
+### 3PC vs 2PC Trade-offs
 
 | Aspect | 2PC | 3PC |
 |--------|-----|-----|
 | Phases | 2 | 3 |
-| Blocking | Yes (indefinite) | Limited (timeout-based) |
-| Coordinator Failure | Participants stuck | Participants can decide |
-| Network Partitions | Problematic | Still problematic |
-| Complexity | Lower | Higher |
-| Latency | Lower | Higher |
+| Blocking on coordinator failure | Yes (indefinite) | No (timeout-based recovery) |
+| Latency | Lower (2 RTT) | Higher (3 RTT) |
+| Complexity | Medium | High |
+| Network partition safety | Problematic | Still problematic |
+| Practical adoption | Common (XA) | Rare |
+
+### Why 3PC Isn't Widely Used
+
+~~~
+Problem: 3PC still fails under network partitions
+
+Scenario: Network splits during PRE-COMMIT
+┌─────────────────────────────────────────────────────┐
+│  Partition A: Coordinator + Participant 1           │
+│  Partition B: Participant 2, 3                      │
+│                                                     │
+│  Partition A: Times out → COMMIT (has majority?)    │
+│  Partition B: Times out → COMMIT (assumed safe)     │
+│                                                     │
+│  Result: Both partitions may make different         │
+│          decisions → INCONSISTENCY                  │
+└─────────────────────────────────────────────────────┘
+
+Reality: Network partitions are common in distributed systems
+         → 3PC doesn't solve the fundamental problem
+         → Industry moved to Saga/Eventual Consistency instead
+~~~
 
 ---
 
 ## 4. Saga Pattern
 
-### Saga: Sequence of Local Transactions
+### Core Concept: Local Transactions + Compensation
 
-```mermaid
+~~~mermaid
 flowchart LR
-    subgraph Forward["Forward Flow (Happy Path)"]
-        direction LR
-        T1["T1<br/>Order"] --> T2["T2<br/>Payment"]
-        T2 --> T3["T3<br/>Inventory"]
-        T3 --> T4["T4<br/>Shipping"]
+    subgraph forward["Forward Flow (Happy Path)"]
+        T1["T1: Create Order"] --> T2["T2: Process Payment"]
+        T2 --> T3["T3: Reserve Inventory"]
+        T3 --> T4["T4: Arrange Shipping"]
     end
-```
+~~~
 
-```mermaid
+~~~mermaid
 flowchart RL
-    subgraph Compensation["Compensation Flow (T3 fails)"]
-        direction RL
-        T3F["T3<br/>Failed ❌"] --> C2["C2<br/>Refund Payment"]
-        C2 --> C1["C1<br/>Cancel Order"]
+    subgraph compensation["Compensation Flow (T3 Fails)"]
+        F["T3 Failed ❌"] --> C2["C2: Refund Payment"]
+        C2 --> C1["C1: Cancel Order"]
     end
-```
+~~~
+
+### Key Principle
+
+~~~
+Each step Ti has a compensating transaction Ci
+
+If Tn fails:
+  Execute Cn-1, Cn-2, ... C1 in reverse order
+  
+Important: Compensation ≠ Rollback
+  - Rollback: Undo as if never happened
+  - Compensation: Apply corrective action (visible in history)
+~~~
 
 ### Choreography vs Orchestration
 
-```mermaid
-flowchart LR
-    subgraph Choreography["Choreography (Event-Driven)"]
-        direction LR
-        OS1["Order<br/>Service"] -->|OrderCreated| PS1["Payment<br/>Service"]
-        PS1 -->|PaymentDone| IS1["Inventory<br/>Service"]
-        IS1 -->|InventoryReserved| OS1
-    end
-```
-
-> **Pros:** Loose coupling, no single point of failure  
-> **Cons:** Hard to track, complex failure handling
-
-```mermaid
+~~~mermaid
 flowchart TB
-    subgraph Orchestration["Orchestration (Central Control)"]
-        direction TB
-        ORCH["Saga<br/>Orchestrator"]
-        ORCH --> OS2["Order<br/>Service"]
-        ORCH --> PS2["Payment<br/>Service"]
-        ORCH --> IS2["Inventory<br/>Service"]
+    subgraph choreo["Choreography: Event-Driven"]
+        O1["Order Service"] -->|"OrderCreated"| E1["Event Bus"]
+        E1 -->|"OrderCreated"| P1["Payment Service"]
+        P1 -->|"PaymentDone"| E1
+        E1 -->|"PaymentDone"| I1["Inventory Service"]
     end
-```
+~~~
 
-> **Pros:** Easy to track, centralized logic  
-> **Cons:** Single point of failure, tighter coupling
+~~~mermaid
+flowchart TB
+    subgraph orch["Orchestration: Central Control"]
+        ORCH["Saga Orchestrator"]
+        ORCH -->|"1. CreateOrder"| O2["Order Service"]
+        ORCH -->|"2. ProcessPayment"| P2["Payment Service"]
+        ORCH -->|"3. ReserveInventory"| I2["Inventory Service"]
+    end
+~~~
 
+### Choreography vs Orchestration Trade-offs
 
-### Saga Orchestrator Implementation
+| Aspect | Choreography | Orchestration |
+|--------|--------------|---------------|
+| Coupling | Loose | Tighter |
+| Single Point of Failure | No | Yes (orchestrator) |
+| Visibility | Hard to track flow | Easy to monitor |
+| Debugging | Difficult | Straightforward |
+| Adding new steps | Modify multiple services | Modify orchestrator only |
+| Cyclic dependencies | Risk of event loops | Not possible |
+| Team autonomy | High | Lower |
 
-```java
-public class OrderSagaOrchestrator {
-    private final OrderService orderService;
-    private final PaymentService paymentService;
-    private final InventoryService inventoryService;
-    private final ShippingService shippingService;
-    private final SagaStateStore stateStore;
+### Architecture Decision Guide
+
+~~~
+Choose CHOREOGRAPHY when:
+├── Teams are autonomous and own their services
+├── Flow is simple (< 4 steps)
+├── Services are truly independent
+└── You have good distributed tracing
+
+Choose ORCHESTRATION when:
+├── Flow is complex (> 4 steps)
+├── Business logic is centralized
+├── You need clear visibility/monitoring
+├── Compensation logic is complex
+└── Regulatory/audit requirements exist
+~~~
+
+### Critical Edge Cases
+
+#### Edge Case 1: Compensation Fails
+
+~~~
+Scenario: Payment refund fails during compensation
+┌─────────────────────────────────────────────────────┐
+│  T1: Order Created ✓                                │
+│  T2: Payment Processed ✓                            │
+│  T3: Inventory Reserve FAILED ✗                     │
+│  C2: Refund Payment FAILED ✗  ← What now?           │
+│                                                     │
+│  Solutions:                                         │
+│  1. Retry with exponential backoff                  │
+│  2. Dead letter queue for manual intervention       │
+│  3. Scheduled reconciliation job                    │
+│  4. Alert operations team                           │
+└─────────────────────────────────────────────────────┘
+~~~
+
+#### Edge Case 2: Duplicate Execution
+
+~~~
+Scenario: Network timeout, message redelivered
+┌─────────────────────────────────────────────────────┐
+│  Payment Service receives "ProcessPayment" twice    │
+│                                                     │
+│  Without idempotency:                               │
+│  → Customer charged twice! 💀                       │
+│                                                     │
+│  Solution: Idempotency keys                         │
+│  1. Each request has unique idempotency_key         │
+│  2. Store processed keys in database                │
+│  3. Check before processing, skip if exists         │
+└─────────────────────────────────────────────────────┘
+~~~
+
+#### Edge Case 3: Out-of-Order Events
+
+~~~
+Scenario: Events arrive out of order
+┌─────────────────────────────────────────────────────┐
+│  Expected: OrderCreated → PaymentDone → Shipped     │
+│  Actual:   PaymentDone → OrderCreated → Shipped     │
+│                                                     │
+│  Solutions:                                         │
+│  1. Event versioning/sequencing                     │
+│  2. State machine validation                        │
+│  3. Buffer and reorder                              │
+│  4. Reject and retry later                          │
+└─────────────────────────────────────────────────────┘
+~~~
+
+#### Edge Case 4: Long-Running Transactions
+
+~~~
+Scenario: Shipping takes 3 days
+┌─────────────────────────────────────────────────────┐
+│  Problem: Can't hold resources for days             │
+│                                                     │
+│  Solutions:                                         │
+│  1. Reservation pattern (soft lock with expiry)    │
+│  2. Split into sub-sagas                            │
+│  3. State machine with timeout transitions          │
+│  4. Async notification when complete                │
+└─────────────────────────────────────────────────────┘
+~~~
+
+### Saga State Machine Design
+
+~~~mermaid
+stateDiagram-v2
+    [*] --> STARTED
+    STARTED --> ORDER_CREATED: createOrder()
+    ORDER_CREATED --> PAYMENT_PROCESSED: processPayment()
+    PAYMENT_PROCESSED --> INVENTORY_RESERVED: reserveInventory()
+    INVENTORY_RESERVED --> COMPLETED: success
     
-    public SagaResult executeSaga(OrderRequest request) {
-        String sagaId = UUID.randomUUID().toString();
-        SagaState state = new SagaState(sagaId, SagaStep.ORDER_CREATED);
-        
-        try {
-            // Step 1: Create Order
-            Order order = orderService.createOrder(request);
-            state.setOrderId(order.getId());
-            state.setStep(SagaStep.ORDER_CREATED);
-            stateStore.save(state);
-            
-            // Step 2: Process Payment
-            PaymentResult payment = paymentService.processPayment(
-                order.getId(), request.getPaymentInfo()
-            );
-            state.setPaymentId(payment.getId());
-            state.setStep(SagaStep.PAYMENT_PROCESSED);
-            stateStore.save(state);
-            
-            // Step 3: Reserve Inventory
-            InventoryReservation reservation = inventoryService.reserve(
-                order.getItems()
-            );
-            state.setReservationId(reservation.getId());
-            state.setStep(SagaStep.INVENTORY_RESERVED);
-            stateStore.save(state);
-            
-            // Step 4: Create Shipment
-            Shipment shipment = shippingService.createShipment(order);
-            state.setShipmentId(shipment.getId());
-            state.setStep(SagaStep.COMPLETED);
-            stateStore.save(state);
-            
-            return SagaResult.success(sagaId);
-            
-        } catch (Exception e) {
-            return compensate(state, e);
-        }
-    }
+    ORDER_CREATED --> COMPENSATING: failure
+    PAYMENT_PROCESSED --> COMPENSATING: failure
+    INVENTORY_RESERVED --> COMPENSATING: failure
     
-    private SagaResult compensate(SagaState state, Exception cause) {
-        // Compensate in reverse order
-        switch (state.getStep()) {
-            case INVENTORY_RESERVED:
-                inventoryService.releaseReservation(state.getReservationId());
-                // Fall through
-            case PAYMENT_PROCESSED:
-                paymentService.refund(state.getPaymentId());
-                // Fall through
-            case ORDER_CREATED:
-                orderService.cancelOrder(state.getOrderId());
-                break;
-        }
-        
-        state.setStep(SagaStep.COMPENSATED);
-        stateStore.save(state);
-        
-        return SagaResult.failed(state.getSagaId(), cause.getMessage());
-    }
-}
-
-enum SagaStep {
-    STARTED,
-    ORDER_CREATED,
-    PAYMENT_PROCESSED,
-    INVENTORY_RESERVED,
-    COMPLETED,
-    COMPENSATED
-}
-```
-
-### Choreography with Events
-
-```java
-// Order Service
-@Service
-public class OrderService {
-    private final EventPublisher eventPublisher;
+    COMPENSATING --> COMPENSATED: all compensations done
+    COMPENSATING --> COMPENSATION_FAILED: compensation fails
     
-    @Transactional
-    public Order createOrder(OrderRequest request) {
-        Order order = orderRepository.save(new Order(request));
-        
-        // Publish event for next step
-        eventPublisher.publish(new OrderCreatedEvent(
-            order.getId(),
-            order.getItems(),
-            order.getTotalAmount()
-        ));
-        
-        return order;
-    }
-    
-    @EventListener
-    public void onPaymentFailed(PaymentFailedEvent event) {
-        // Compensation: cancel order
-        Order order = orderRepository.findById(event.getOrderId());
-        order.setStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
-    }
-}
-
-// Payment Service
-@Service
-public class PaymentService {
-    private final EventPublisher eventPublisher;
-    
-    @EventListener
-    public void onOrderCreated(OrderCreatedEvent event) {
-        try {
-            Payment payment = processPayment(event);
-            
-            eventPublisher.publish(new PaymentCompletedEvent(
-                event.getOrderId(),
-                payment.getId()
-            ));
-        } catch (PaymentException e) {
-            eventPublisher.publish(new PaymentFailedEvent(
-                event.getOrderId(),
-                e.getMessage()
-            ));
-        }
-    }
-}
-```
+    COMPLETED --> [*]
+    COMPENSATED --> [*]
+    COMPENSATION_FAILED --> MANUAL_INTERVENTION
+~~~
 
 ---
 
@@ -410,14 +418,26 @@ public class PaymentService {
 ### The Dual Write Problem
 
 ```mermaid
-flowchart TB
-    S["Service"] -->|"1. Write to Database ✓"| DB[(Database)]
-    S -->|"2. Publish Event ❌ (fails)"| MQ[Message Broker]
+flowchart LR
+    S["Service"] -->|"1. Write DB ✓"| DB[(Database)]
+    S -->|"2. Publish Event ✗"| MQ[Message Broker]
     
     style MQ stroke:#ff0000,stroke-width:2px
-```
+~~~
 
-> **Result:** Database updated but event never published! Other services have inconsistent view.
+~~~
+Problem: Two separate systems, no atomic guarantee
+
+Failure scenarios:
+1. DB write succeeds, event publish fails
+   → Data saved but other services never notified
+
+2. Event published, DB write fails
+   → Other services act on non-existent data
+
+3. Service crashes between the two operations
+   → Inconsistent state
+~~~
 
 ### Transactional Outbox Pattern
 
@@ -425,157 +445,235 @@ flowchart TB
 flowchart TB
     S["Service"] --> TX
     
-    subgraph TX["Single Transaction"]
+    subgraph TX["Single Database Transaction"]
         W1["1. Write business data"]
         W2["2. Write event to outbox table"]
-        W1 --> W2
     end
     
-    TX --> RELAY["Message Relay<br/>(CDC/Polling)<br/>Reads outbox → Publishes to broker"]
-    RELAY --> KAFKA["Message Broker<br/>(Kafka)"]
-```
-
-### Outbox Implementation
-
-```java
-@Entity
-@Table(name = "outbox_events")
-public class OutboxEvent {
-    @Id
-    private String id;
+    TX --> DB[(Database)]
     
-    private String aggregateType;  // e.g., "Order"
-    private String aggregateId;    // e.g., order ID
-    private String eventType;      // e.g., "OrderCreated"
-    
-    @Column(columnDefinition = "TEXT")
-    private String payload;        // JSON event data
-    
-    private Instant createdAt;
-    private boolean published;
-}
+    RELAY["Message Relay<br/>(Polling or CDC)"] -->|"Read outbox"| DB
+    RELAY -->|"Publish"| KAFKA["Message Broker"]
+~~~
 
-@Service
-public class OrderService {
-    private final OrderRepository orderRepository;
-    private final OutboxRepository outboxRepository;
+### Outbox Table Design
+
+~~~sql
+CREATE TABLE outbox_events (
+    id              UUID PRIMARY KEY,
+    aggregate_type  VARCHAR(255),    -- e.g., 'Order'
+    aggregate_id    VARCHAR(255),    -- e.g., order_id
+    event_type      VARCHAR(255),    -- e.g., 'OrderCreated'
+    payload         JSONB,           -- event data
+    created_at      TIMESTAMP,
+    published_at    TIMESTAMP NULL,  -- NULL = not yet published
     
-    @Transactional  // Single transaction!
-    public Order createOrder(OrderRequest request) {
-        // 1. Save business entity
-        Order order = new Order(request);
-        orderRepository.save(order);
-        
-        // 2. Save event to outbox (same transaction)
-        OutboxEvent event = new OutboxEvent();
-        event.setId(UUID.randomUUID().toString());
-        event.setAggregateType("Order");
-        event.setAggregateId(order.getId());
-        event.setEventType("OrderCreated");
-        event.setPayload(toJson(new OrderCreatedEvent(order)));
-        event.setCreatedAt(Instant.now());
-        event.setPublished(false);
-        
-        outboxRepository.save(event);
-        
-        return order;
-    }
-}
+    INDEX idx_unpublished (published_at) WHERE published_at IS NULL
+);
+~~~
 
-// Message Relay (runs separately)
-@Scheduled(fixedDelay = 1000)
-public void publishOutboxEvents() {
-    List<OutboxEvent> events = outboxRepository
-        .findByPublishedFalseOrderByCreatedAt();
-    
-    for (OutboxEvent event : events) {
-        try {
-            kafkaTemplate.send(
-                event.getAggregateType(),
-                event.getAggregateId(),
-                event.getPayload()
-            );
-            
-            event.setPublished(true);
-            outboxRepository.save(event);
-            
-        } catch (Exception e) {
-            // Will retry on next poll
-            log.error("Failed to publish event: {}", event.getId(), e);
-        }
-    }
-}
-```
+### Message Relay Strategies
 
-### Change Data Capture (CDC) with Debezium
+| Strategy | Pros | Cons |
+|----------|------|------|
+| **Polling** | Simple, no extra infrastructure | Latency, DB load |
+| **CDC (Debezium)** | Real-time, low DB load | Complex setup |
+| **Transaction log tailing** | Very efficient | DB-specific |
 
-```yaml
-# Debezium connector configuration
-{
-  "name": "outbox-connector",
-  "config": {
-    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-    "database.hostname": "postgres",
-    "database.port": "5432",
-    "database.user": "debezium",
-    "database.password": "secret",
-    "database.dbname": "orders",
-    "table.include.list": "public.outbox_events",
-    "transforms": "outbox",
-    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
-    "transforms.outbox.route.topic.replacement": "${routedByValue}",
-    "transforms.outbox.table.field.event.key": "aggregate_id",
-    "transforms.outbox.table.field.event.payload": "payload"
-  }
-}
-```
+### CDC vs Polling Trade-offs
+
+~~~
+Polling:
+├── Latency: 1-5 seconds (configurable)
+├── DB Load: Constant queries
+├── Complexity: Low
+├── Ordering: Must handle carefully
+└── Best for: Simple setups, low volume
+
+CDC (Change Data Capture):
+├── Latency: Milliseconds
+├── DB Load: Minimal (reads transaction log)
+├── Complexity: High (Kafka Connect, Debezium)
+├── Ordering: Guaranteed by log position
+└── Best for: High volume, low latency requirements
+~~~
+
+### Idempotent Consumer Pattern
+
+~~~
+Problem: Message broker may deliver same message twice
+         (at-least-once delivery)
+
+Solution: Track processed message IDs
+
+┌─────────────────────────────────────────────────────┐
+│  Consumer receives message                          │
+│      ↓                                              │
+│  Check: Is message_id in processed_messages table? │
+│      ↓                                              │
+│  YES → Skip (already processed)                     │
+│  NO  → Process + Insert message_id + Commit         │
+│                                                     │
+│  All in single transaction!                         │
+└─────────────────────────────────────────────────────┘
+~~~
 
 ---
 
-## 6. Comparison of Approaches
+## 6. Pattern Comparison & Selection Guide
 
-| Aspect | 2PC | Saga | Eventual Consistency |
-|--------|-----|------|---------------------|
-| Consistency | Strong | Eventual | Eventual |
-| Isolation | Full | None (dirty reads possible) | None |
-| Latency | High (blocking) | Medium | Low |
-| Complexity | Medium | High | Medium |
-| Scalability | Low | High | High |
-| Failure Handling | Automatic rollback | Compensation logic | Idempotent handlers |
-| Use Case | Financial systems | E-commerce, booking | Social media, analytics |
+### Comprehensive Comparison
+
+| Aspect | 2PC | 3PC | Saga | Eventual Consistency |
+|--------|-----|-----|------|---------------------|
+| Consistency | Strong | Strong | Eventual | Eventual |
+| Isolation | Full | Full | None | None |
+| Availability | Low | Medium | High | High |
+| Latency | High | Higher | Medium | Low |
+| Scalability | Poor | Poor | Good | Excellent |
+| Complexity | Medium | High | High | Medium |
+| Recovery | Automatic | Timeout-based | Compensation | Retry + Idempotency |
+
+### Decision Matrix
+
+```mermaid
+flowchart TB
+    START["Need distributed transaction?"] --> Q1{"Strong consistency<br/>required?"}
+    
+    Q1 -->|"Yes"| Q2{"Can tolerate<br/>blocking?"}
+    Q1 -->|"No"| Q3{"Complex multi-step<br/>workflow?"}
+    
+    Q2 -->|"Yes"| TWO_PC["2PC<br/>(XA Transactions)"]
+    Q2 -->|"No"| CONSIDER["Consider relaxing<br/>consistency requirements"]
+    
+    Q3 -->|"Yes"| SAGA["Saga Pattern"]
+    Q3 -->|"No"| OUTBOX["Outbox + Eventual<br/>Consistency"]
+    
+    SAGA --> Q4{"Need visibility<br/>& control?"}
+    Q4 -->|"Yes"| ORCH["Orchestration"]
+    Q4 -->|"No"| CHOREO["Choreography"]
+~~~
+
+### Industry Use Cases
+
+| Company/Domain | Pattern | Reason |
+|----------------|---------|--------|
+| Banking (transfers) | 2PC or Saga with strict compensation | Regulatory, money involved |
+| E-commerce (orders) | Saga (orchestration) | Complex flow, need visibility |
+| Social media (posts) | Eventual consistency | High scale, consistency less critical |
+| Ride-sharing (booking) | Saga (choreography) | Real-time, multiple services |
+| Inventory systems | Saga + reservation pattern | Prevent overselling |
 
 ---
 
-## Key Takeaways
+## 7. Production Considerations
 
-1. **2PC provides strong consistency** but blocks and doesn't scale well
-2. **Sagas trade consistency for availability** using compensation
-3. **Choreography is loosely coupled** but hard to track and debug
-4. **Orchestration centralizes logic** but creates a single point of failure
-5. **Outbox pattern solves dual-write** by using a single transaction
-6. **CDC (Debezium) is more reliable** than polling for outbox relay
-7. **Design for idempotency** - messages may be delivered multiple times
-8. **Choose based on requirements** - not all systems need strong consistency
+### Monitoring & Observability
+
+~~~
+Essential Metrics:
+├── Saga completion rate
+├── Compensation frequency
+├── Average saga duration
+├── Failed/stuck sagas count
+├── Outbox lag (unpublished events)
+└── Message processing latency
+
+Essential Logs:
+├── Saga state transitions
+├── Compensation triggers
+├── Retry attempts
+└── Timeout events
+
+Distributed Tracing:
+├── Correlation ID across all services
+├── Span for each saga step
+└── Parent-child relationship for compensation
+~~~
+
+### Failure Recovery Strategies
+
+~~~
+Strategy 1: Automatic Retry
+├── Exponential backoff: 1s, 2s, 4s, 8s...
+├── Max retries: 3-5 typically
+├── Circuit breaker after threshold
+└── Alert on repeated failures
+
+Strategy 2: Dead Letter Queue
+├── Move failed messages to DLQ
+├── Manual inspection and replay
+├── Audit trail preserved
+└── No blocking of other messages
+
+Strategy 3: Scheduled Reconciliation
+├── Periodic job compares expected vs actual state
+├── Fixes inconsistencies automatically
+├── Reports discrepancies
+└── Last resort safety net
+~~~
+
+### Testing Distributed Transactions
+
+~~~
+Test Categories:
+├── Happy path (all services succeed)
+├── Single service failure
+├── Multiple service failures
+├── Network partition simulation
+├── Timeout scenarios
+├── Duplicate message handling
+├── Out-of-order message handling
+└── Compensation failure scenarios
+
+Tools:
+├── Chaos engineering (Chaos Monkey, Litmus)
+├── Network fault injection (Toxiproxy)
+├── Contract testing (Pact)
+└── Integration test containers
+~~~
 
 ---
 
-## Practical Exercise
+## 8. Key Takeaways
 
-Design a distributed transaction strategy for an e-commerce order flow:
+| # | Takeaway |
+|---|----------|
+| 1 | **2PC provides strong consistency** but blocks and doesn't scale |
+| 2 | **3PC reduces blocking** but still fails under network partitions |
+| 3 | **Sagas trade isolation for availability** — design for compensation |
+| 4 | **Choreography is loosely coupled** but hard to debug |
+| 5 | **Orchestration centralizes logic** but creates SPOF |
+| 6 | **Outbox pattern solves dual-write** — use CDC for production |
+| 7 | **Design for idempotency** — messages will be delivered multiple times |
+| 8 | **Compensation ≠ Rollback** — it's a corrective action, not undo |
+| 9 | **Monitor saga health** — stuck sagas indicate systemic issues |
+| 10 | **Choose based on requirements** — not all systems need strong consistency |
+
+---
+
+## 9. Practical Exercise
+
+### Design Challenge
+
+Design a distributed transaction strategy for a ride-sharing booking:
+
+**Flow:**
+1. User requests ride
+2. Find available driver
+3. Reserve driver (can't accept other rides)
+4. Process payment authorization
+5. Confirm booking
 
 **Requirements:**
-- Order creation, payment processing, inventory reservation, shipping
-- Payment failures should cancel the order
-- Inventory failures should refund payment and cancel order
-- System should handle partial failures gracefully
+- Driver reservation expires after 30 seconds
+- Payment failures should release driver
+- Handle driver cancellation after booking
+- Support concurrent booking attempts for same driver
 
-**Tasks:**
-1. Draw the saga flow with compensation steps
-2. Decide between choreography and orchestration (justify your choice)
-3. Implement the outbox pattern for reliable event publishing
-4. Handle idempotency for payment processing
-
-**Discussion Points:**
-- What happens if compensation fails?
-- How do you handle long-running transactions (e.g., shipping takes days)?
-- How do you provide transaction status to users?
+**Discussion Questions:**
+1. Choreography or orchestration? Why?
+2. How do you handle "driver reserved but payment timeout"?
+3. What if compensation (release driver) fails?
+4. How do you prevent double-booking a driver?
+5. How do you show booking status to user in real-time?
