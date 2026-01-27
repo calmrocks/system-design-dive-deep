@@ -164,12 +164,13 @@ Scenario 3: Network partition during Phase 2
 
 ### When to Use 2PC
 
-| ✅ Good Fit | ❌ Poor Fit |
-|------------|-------------|
-| Financial systems requiring strong consistency | High-throughput systems |
-| Small number of participants (2-3) | Many microservices |
-| Low-latency network (same datacenter) | Cross-region deployments |
-| Batch processing jobs | User-facing real-time APIs |
+| ✅ Good Fit                                     | ❌ Poor Fit                 |
+| ---------------------------------------------- | -------------------------- |
+| Financial systems requiring strong consistency | High-throughput systems    |
+| Small number of participants (2-3)             | Many microservices         |
+| Low-latency network (same datacenter)          | Cross-region deployments   |
+| Batch processing jobs                          | User-facing real-time APIs |
+|                                                |                            |
 
 ---
 
