@@ -51,36 +51,6 @@ flowchart LR
     style S fill:#90EE90
 ```
 
-### Rate Limiting vs Throttling
-
-While often used interchangeably, there are subtle differences:
-
-| Aspect                | Rate Limiting                 | Throttling                     |
-| --------------------- | ----------------------------- | ------------------------------ |
-| **Action**            | Rejects excess requests       | Slows down/queues requests     |
-| **Response**          | Immediate rejection (429)     | Delayed processing             |
-| **Client Experience** | Error response                | Slower response                |
-| **Use Case**          | Hard limits, abuse prevention | Graceful degradation           |
-| **Analogy**           | Bouncer at a club             | Traffic light controlling flow |
-
-```mermaid
-flowchart TB
-    subgraph "Rate Limiting"
-        RL1[Request arrives] --> RL2{Under limit?}
-        RL2 -->|Yes| RL3[Process immediately]
-        RL2 -->|No| RL4[Reject with 429]
-    end
-    
-    subgraph "Throttling"
-        T1[Request arrives] --> T2{Under limit?}
-        T2 -->|Yes| T3[Process immediately]
-        T2 -->|No| T4[Queue/Delay]
-        T4 --> T5[Process later]
-    end
-    
-    style RL4 fill:#ff6b6b
-    style T4 fill:#ffa500
-```
 
 ### Key Terminology
 
@@ -267,192 +237,6 @@ flowchart LR
 
 ---
 
-## Real-World Examples and Case Studies
-
-### Twitter: API Rate Limiting as Core Strategy
-
-**Context:** Twitter handles 500+ million tweets per day with extensive API usage.
-
-**Rate Limiting Implementation:**
-
-| Endpoint Category | Rate Limit | Window |
-|-------------------|------------|--------|
-| User timeline | 900 requests | 15 minutes |
-| Search tweets | 180 requests | 15 minutes |
-| Post tweet | 300 requests | 3 hours |
-| Direct messages | 1,000 requests | 24 hours |
-
-**Key Decisions:**
-- Different limits per endpoint based on resource cost
-- App-level vs. user-level limits
-- Elevated access tiers for partners
-- Clear rate limit headers in responses
-
-**Headers Returned:**
-
-    X-Rate-Limit-Limit: 900
-    X-Rate-Limit-Remaining: 845
-    X-Rate-Limit-Reset: 1644789600
-
-**Lessons Learned:**
-> "Rate limiting isn't just about protection—it's about creating a sustainable ecosystem where developers can build reliably." — Twitter API Team
-
----
-
-### GitHub: Sophisticated Multi-Tier Rate Limiting
-
-**Rate Limit Structure:**
-
-```mermaid
-flowchart TB
-    subgraph "GitHub Rate Limit Tiers"
-        Unauth[Unauthenticated]
-        Auth[Authenticated]
-        OAuth[OAuth App]
-        GHA[GitHub Actions]
-        Enterprise[Enterprise]
-    end
-    
-    Unauth -->|"60/hour"| API[GitHub API]
-    Auth -->|"5,000/hour"| API
-    OAuth -->|"5,000/hour per user"| API
-    GHA -->|"1,000/hour"| API
-    Enterprise -->|"15,000/hour"| API
-```
-
-**Conditional Requests:**
-GitHub encourages efficient API usage through conditional requests:
-- Returns `304 Not Modified` for unchanged resources
-- Conditional requests don't count against rate limit
-- Incentivizes caching and efficient client behavior
-
-**Secondary Rate Limits:**
-Beyond request counts, GitHub also limits:
-- Concurrent requests (100 per endpoint)
-- Content creation (burst protection)
-- Compute-intensive operations
-
----
-
-### Stripe: Rate Limiting for Financial Infrastructure
-
-**Context:** Stripe processes hundreds of billions of dollars annually.
-
-**Approach:**
-- **Live mode:** 100 read requests/sec, 100 write requests/sec
-- **Test mode:** More lenient for development
-- **Burst allowance:** Short spikes permitted
-
-**Intelligent Limiting:**
-- Limits apply per API key
-- Different limits for different endpoints
-- Idempotency keys prevent duplicate charges
-
-**Best Practice from Stripe:**
-> "We recommend implementing retry logic with exponential backoff. Rate limits protect both you and us—preventing runaway costs and ensuring platform stability."
-
----
-
-### AWS: Service-Level Throttling
-
-**API Gateway Throttling:**
-
-| Level | Default Limit | Configurable |
-|-------|--------------|--------------|
-| Account | 10,000 req/sec | Yes |
-| Stage | 10,000 req/sec | Yes |
-| Method | Inherited | Yes |
-| Usage Plan | Custom | Yes |
-
-**DynamoDB Throttling:**
-- Read Capacity Units (RCU) and Write Capacity Units (WCU)
-- Automatic throttling when exceeded
-- Adaptive capacity for uneven workloads
-
-**The 2017 S3 Outage Connection:**
-While primarily an operational error, the incident highlighted:
-- Services without proper throttling cascaded failures
-- Rate limiting at service boundaries could have contained impact
-- Dependency on single region without limits was problematic
-
----
-
-### Shopify: Flash Sale Protection
-
-**Challenge:** Handle extreme traffic spikes during flash sales and product drops.
-
-**Solution: Leaky Bucket at Scale**
-
-    Shopify's Approach:
-
-    Normal traffic: 2 requests/second per store
-    Flash sale: Same limit enforced
-
-    What happens:
-    - First requests fill the bucket instantly
-    - Excess requests queued briefly
-    - Beyond queue: 429 with Retry-After header
-    - Critical paths (checkout) get priority
-
-**Results:**
-- Maintained checkout availability during 100x traffic spikes
-- Protected backend systems from overload
-- Fair access for customers during limited releases
-
----
-
-### Cloudflare: Edge Rate Limiting at Scale
-
-**Context:** Cloudflare handles 10%+ of global internet traffic.
-
-**Multi-Layer Protection:**
-
-```mermaid
-flowchart TB
-    Internet[Internet Traffic] --> L1[Layer 1: IP Reputation]
-    L1 --> L2[Layer 2: Connection Limits]
-    L2 --> L3[Layer 3: Request Rate Limiting]
-    L3 --> L4[Layer 4: Advanced Rules]
-    L4 --> Origin[Origin Server]
-    
-    L1 -.->|"Known bad IPs"| Block1[Block]
-    L2 -.->|"Too many connections"| Block2[Block]
-    L3 -.->|"Rate exceeded"| Block3[Challenge/Block]
-    L4 -.->|"Custom rules triggered"| Block4[Block]
-    
-    style Block1 fill:#ff6b6b
-    style Block2 fill:#ff6b6b
-    style Block3 fill:#ffa500
-    style Block4 fill:#ff6b6b
-```
-
-**Key Innovation:**
-- Rate limiting at edge (close to users)
-- Reduces load on origin servers
-- Millisecond-level decision making
-- Distributed state for global consistency
-
----
-
-### Reddit: The Hug of Death Problem
-
-**The Challenge:**
-When Reddit links to small websites, massive traffic floods can crash them.
-
-**From Both Sides:**
-
-| Perspective | Problem | Solution |
-|-------------|---------|----------|
-| **Linked Site** | Sudden 1000x traffic | CDN + rate limiting + caching |
-| **Reddit API** | Developers hammering API | Strict rate limits (60 req/min) |
-
-**Reddit's API Rate Limits:**
-- OAuth clients: 60 requests per minute
-- Must include User-Agent header
-- Violations result in temporary bans
-- Repeated violations lead to permanent bans
-
----
 
 ## Rate Limiting Algorithms
 
@@ -1282,6 +1066,193 @@ Document for API consumers:
     ...
     Max wait: 32 seconds
     Add jitter: ±20% randomization
+
+---
+
+## Real-World Examples and Case Studies
+
+### Twitter: API Rate Limiting as Core Strategy
+
+**Context:** Twitter handles 500+ million tweets per day with extensive API usage.
+
+**Rate Limiting Implementation:**
+
+| Endpoint Category | Rate Limit | Window |
+|-------------------|------------|--------|
+| User timeline | 900 requests | 15 minutes |
+| Search tweets | 180 requests | 15 minutes |
+| Post tweet | 300 requests | 3 hours |
+| Direct messages | 1,000 requests | 24 hours |
+
+**Key Decisions:**
+- Different limits per endpoint based on resource cost
+- App-level vs. user-level limits
+- Elevated access tiers for partners
+- Clear rate limit headers in responses
+
+**Headers Returned:**
+
+    X-Rate-Limit-Limit: 900
+    X-Rate-Limit-Remaining: 845
+    X-Rate-Limit-Reset: 1644789600
+
+**Lessons Learned:**
+> "Rate limiting isn't just about protection—it's about creating a sustainable ecosystem where developers can build reliably." — Twitter API Team
+
+---
+
+### GitHub: Sophisticated Multi-Tier Rate Limiting
+
+**Rate Limit Structure:**
+
+```mermaid
+flowchart TB
+    subgraph "GitHub Rate Limit Tiers"
+        Unauth[Unauthenticated]
+        Auth[Authenticated]
+        OAuth[OAuth App]
+        GHA[GitHub Actions]
+        Enterprise[Enterprise]
+    end
+    
+    Unauth -->|"60/hour"| API[GitHub API]
+    Auth -->|"5,000/hour"| API
+    OAuth -->|"5,000/hour per user"| API
+    GHA -->|"1,000/hour"| API
+    Enterprise -->|"15,000/hour"| API
+```
+
+**Conditional Requests:**
+GitHub encourages efficient API usage through conditional requests:
+- Returns `304 Not Modified` for unchanged resources
+- Conditional requests don't count against rate limit
+- Incentivizes caching and efficient client behavior
+
+**Secondary Rate Limits:**
+Beyond request counts, GitHub also limits:
+- Concurrent requests (100 per endpoint)
+- Content creation (burst protection)
+- Compute-intensive operations
+
+---
+
+### Stripe: Rate Limiting for Financial Infrastructure
+
+**Context:** Stripe processes hundreds of billions of dollars annually.
+
+**Approach:**
+- **Live mode:** 100 read requests/sec, 100 write requests/sec
+- **Test mode:** More lenient for development
+- **Burst allowance:** Short spikes permitted
+
+**Intelligent Limiting:**
+- Limits apply per API key
+- Different limits for different endpoints
+- Idempotency keys prevent duplicate charges
+
+**Best Practice from Stripe:**
+> "We recommend implementing retry logic with exponential backoff. Rate limits protect both you and us—preventing runaway costs and ensuring platform stability."
+
+---
+
+### AWS: Service-Level Throttling
+
+**API Gateway Throttling:**
+
+| Level | Default Limit | Configurable |
+|-------|--------------|--------------|
+| Account | 10,000 req/sec | Yes |
+| Stage | 10,000 req/sec | Yes |
+| Method | Inherited | Yes |
+| Usage Plan | Custom | Yes |
+
+**DynamoDB Throttling:**
+- Read Capacity Units (RCU) and Write Capacity Units (WCU)
+- Automatic throttling when exceeded
+- Adaptive capacity for uneven workloads
+
+**The 2017 S3 Outage Connection:**
+While primarily an operational error, the incident highlighted:
+- Services without proper throttling cascaded failures
+- Rate limiting at service boundaries could have contained impact
+- Dependency on single region without limits was problematic
+
+---
+
+### Shopify: Flash Sale Protection
+
+**Challenge:** Handle extreme traffic spikes during flash sales and product drops.
+
+**Solution: Leaky Bucket at Scale**
+
+    Shopify's Approach:
+
+    Normal traffic: 2 requests/second per store
+    Flash sale: Same limit enforced
+
+    What happens:
+    - First requests fill the bucket instantly
+    - Excess requests queued briefly
+    - Beyond queue: 429 with Retry-After header
+    - Critical paths (checkout) get priority
+
+**Results:**
+- Maintained checkout availability during 100x traffic spikes
+- Protected backend systems from overload
+- Fair access for customers during limited releases
+
+---
+
+### Cloudflare: Edge Rate Limiting at Scale
+
+**Context:** Cloudflare handles 10%+ of global internet traffic.
+
+**Multi-Layer Protection:**
+
+```mermaid
+flowchart TB
+    Internet[Internet Traffic] --> L1[Layer 1: IP Reputation]
+    L1 --> L2[Layer 2: Connection Limits]
+    L2 --> L3[Layer 3: Request Rate Limiting]
+    L3 --> L4[Layer 4: Advanced Rules]
+    L4 --> Origin[Origin Server]
+    
+    L1 -.->|"Known bad IPs"| Block1[Block]
+    L2 -.->|"Too many connections"| Block2[Block]
+    L3 -.->|"Rate exceeded"| Block3[Challenge/Block]
+    L4 -.->|"Custom rules triggered"| Block4[Block]
+    
+    style Block1 fill:#ff6b6b
+    style Block2 fill:#ff6b6b
+    style Block3 fill:#ffa500
+    style Block4 fill:#ff6b6b
+```
+
+**Key Innovation:**
+- Rate limiting at edge (close to users)
+- Reduces load on origin servers
+- Millisecond-level decision making
+- Distributed state for global consistency
+
+---
+
+### Reddit: The Hug of Death Problem
+
+**The Challenge:**
+When Reddit links to small websites, massive traffic floods can crash them.
+
+**From Both Sides:**
+
+| Perspective | Problem | Solution |
+|-------------|---------|----------|
+| **Linked Site** | Sudden 1000x traffic | CDN + rate limiting + caching |
+| **Reddit API** | Developers hammering API | Strict rate limits (60 req/min) |
+
+**Reddit's API Rate Limits:**
+- OAuth clients: 60 requests per minute
+- Must include User-Agent header
+- Violations result in temporary bans
+- Repeated violations lead to permanent bans
 
 ---
 
