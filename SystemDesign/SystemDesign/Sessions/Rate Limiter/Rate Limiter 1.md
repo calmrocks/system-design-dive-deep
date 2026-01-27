@@ -1077,12 +1077,12 @@ Document for API consumers:
 
 **Rate Limiting Implementation:**
 
-| Endpoint Category | Rate Limit | Window |
-|-------------------|------------|--------|
-| User timeline | 900 requests | 15 minutes |
-| Search tweets | 180 requests | 15 minutes |
-| Post tweet | 300 requests | 3 hours |
-| Direct messages | 1,000 requests | 24 hours |
+| Endpoint Category | Rate Limit     | Window     |
+| ----------------- | -------------- | ---------- |
+| User timeline     | 900 requests   | 15 minutes |
+| Search tweets     | 180 requests   | 15 minutes |
+| Post tweet        | 300 requests   | 3 hours    |
+| Direct messages   | 1,000 requests | 24 hours   |
 
 **Key Decisions:**
 - Different limits per endpoint based on resource cost
