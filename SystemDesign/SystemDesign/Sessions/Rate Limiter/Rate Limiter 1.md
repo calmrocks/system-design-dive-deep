@@ -344,7 +344,7 @@ flowchart TB
 ```mermaid
 flowchart LR
     subgraph "Fixed Window"
-        W1[Window 1\n00:00-00:59] --> W2[Window 2\n01:00-01:59] --> W3[Window 3\n02:00-02:59]
+        W1[Window 1\n00:00-00:59] --> W2[Window 2<br>01:00-01:59] --> W3[Window 3\n02:00-02:59]
     end
     
     W1 ---|"Count: 95/100"| OK1[✓]
