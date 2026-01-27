@@ -98,7 +98,7 @@ mindmap
 
 #### 1. Protection Against Abuse and Attacks
 
-- **DDoS Mitigation:** Limits impact of distributed denial-of-service attacks
+- **DoS Mitigation:** Limits impact of distributed denial-of-service attacks
 - **Brute Force Prevention:** Stops password guessing and credential stuffing
 - **Scraping Defense:** Prevents automated data harvesting
 - **Bug Protection:** Contains damage from client bugs causing request loops
