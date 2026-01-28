@@ -296,15 +296,15 @@ flowchart TB
 
 ### Choreography vs Orchestration Trade-offs
 
-| Aspect | Choreography | Orchestration |
-|--------|--------------|---------------|
-| Coupling | Loose | Tighter |
-| Single Point of Failure | No | Yes (orchestrator) |
-| Visibility | Hard to track flow | Easy to monitor |
-| Debugging | Difficult | Straightforward |
-| Adding new steps | Modify multiple services | Modify orchestrator only |
-| Cyclic dependencies | Risk of event loops | Not possible |
-| Team autonomy | High | Lower |
+| Aspect                  | Choreography             | Orchestration            |
+| ----------------------- | ------------------------ | ------------------------ |
+| Coupling                | Loose                    | Tighter                  |
+| Single Point of Failure | No                       | Yes (orchestrator)       |
+| Visibility              | Hard to track flow       | Easy to monitor          |
+| Debugging               | Difficult                | Straightforward          |
+| Adding new steps        | Modify multiple services | Modify orchestrator only |
+| Cyclic dependencies     | Risk of event loops      | Not possible             |
+| Team autonomy           | High                     | Lower                    |
 
 ### Architecture Decision Guide
 
