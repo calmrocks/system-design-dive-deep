@@ -1,1 +1,0 @@
-SystemDesign/SystemDesign/README.md
