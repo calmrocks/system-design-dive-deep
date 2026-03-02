@@ -44,6 +44,16 @@ system-design-dive-deep/
 
 ## 📚 Session Topics
 
+### Use-Case Driven Topics
+
+| Topic | Duration | Level | Key Concepts | Discussion | Materials |
+|-------|----------|-------|--------------|------------|-----------|
+| [Event-Driven Architecture](Sessions/Event-Driven%20Architecture/Event-Driven%20Architecture.md) | 60 min | Intermediate-Advanced | Event notification vs state transfer vs sourcing, choreography vs orchestration, schema evolution, idempotent consumers | [Discussion Topics](Sessions/Event-Driven%20Architecture/Discussion%20Topics.md) | [Materials](Sessions/Event-Driven%20Architecture/Materials.md) |
+| [Data Replication & Consistency](Sessions/Data%20Replication%20%26%20Consistency/Data%20Replication%20%26%20Consistency.md) | 60 min | Intermediate-Advanced | Single-leader/multi-leader/leaderless replication, consistency models, conflict resolution, CRDTs, failover | [Discussion Topics](Sessions/Data%20Replication%20%26%20Consistency/Discussion%20Topics.md) | [Materials](Sessions/Data%20Replication%20%26%20Consistency/Materials.md) |
+| [Distributed Locking](Sessions/Distributed%20Locking/Distributed%20Locking.md) | 60 min | Intermediate-Advanced | Redis/ZooKeeper/DB locks, Redlock algorithm, fencing tokens, lock renewal, optimistic concurrency | [Discussion Topics](Sessions/Distributed%20Locking/Discussion%20Topics.md) | [Materials](Sessions/Distributed%20Locking/Materials.md) |
+
+### Foundational Topics
+
 | Topic | Duration | Level | Key Concepts | Discussion | Materials |
 |-------|----------|-------|--------------|------------|-----------|
 | [Cache](Sessions/Cache/Cache.md) | 60 min | Intermediate | Cache layers, eviction policies (LRU/LFU), write strategies, cache invalidation | [Discussion Topics](Sessions/Cache/Discussion%20Topics.md) | [Materials](Sessions/Cache/Materials.md) |
