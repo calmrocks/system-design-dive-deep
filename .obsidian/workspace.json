@@ -206,6 +206,7 @@
   "active": "eb731c301db6b814",
   "lastOpenFiles": [
     "Sessions/Event-Driven Architecture/Event-Driven Architecture.md",
+    "Sessions/Event-Driven Architecture/Materials.md",
     "Sessions/Event-Driven Architecture/Discussion Topics.md",
     "Sessions/Message Queue/Message Queue.md",
     "Sessions/Message Queue/Materials.md",
@@ -233,7 +234,6 @@
     "SystemDesign/Sessions/Circuit Breaker/Materials.md",
     "SystemDesign/Sessions/Cache/Materials.md",
     "SystemDesign/Sessions/Cache/Discussion Topics.md",
-    "SystemDesign/Sessions/Load Balancer/Load Balancer.md",
     "SystemDesign/Sessions/Circuit Breaker",
     "SystemDesign/Sessions/Distributed Transactions",
     "SystemDesign/Sessions/Service Discovery",
