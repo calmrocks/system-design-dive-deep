@@ -29,12 +29,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Sessions/Event-Driven Architecture/Materials.md",
+                "file": "Sessions/Event-Driven Architecture/Slides.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Materials"
+              "title": "Slides"
             }
           }
         ],
@@ -203,10 +203,12 @@
       "mermaid-tools:Open Mermaid Toolbar": false
     }
   },
-  "active": "eb731c301db6b814",
+  "active": "ea33e1b449338732",
   "lastOpenFiles": [
-    "Sessions/Event-Driven Architecture/Event-Driven Architecture.md",
+    "Untitled",
     "Sessions/Event-Driven Architecture/Materials.md",
+    "Sessions/Event-Driven Architecture/Slides.md",
+    "Sessions/Event-Driven Architecture/Event-Driven Architecture.md",
     "Sessions/Event-Driven Architecture/Discussion Topics.md",
     "Sessions/Message Queue/Message Queue.md",
     "Sessions/Message Queue/Materials.md",
@@ -232,8 +234,6 @@
     "SystemDesign/SystemDesign",
     "SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/Sessions/Circuit Breaker/Materials.md",
-    "SystemDesign/Sessions/Cache/Materials.md",
-    "SystemDesign/Sessions/Cache/Discussion Topics.md",
     "SystemDesign/Sessions/Circuit Breaker",
     "SystemDesign/Sessions/Distributed Transactions",
     "SystemDesign/Sessions/Service Discovery",
