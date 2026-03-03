@@ -10,23 +10,15 @@ hash: true
 
 <!-- slide bg="#0b1120" -->
 
-<grid drag="80 30" drop="center" style="place-items: center;">
-
 # 🔷 Event-Driven Architecture
 
 ## Architecture Guide
 
-</grid>
-
-<grid drag="60 20" drop="center" pad="80px 0 0 0" style="place-items: center;">
-
-| Attribute | Details |
-|-----------|---------|
-| ⏱ Duration | 60 minutes |
+| | |
+|---|---|
+| ⏱ Duration | 60 min |
 | 📊 Level | Intermediate → Advanced |
 | 📋 Prerequisites | Message Queues, Distributed Txns |
-
-</grid>
 
 ---
 
@@ -34,56 +26,17 @@ hash: true
 
 ## 🎯 Learning Objectives
 
-<grid drag="85 70" drop="center" style="font-size: 0.78em;">
-
-| # | Objective |
-|---|-----------|
-| 1 | Understand event-driven patterns and **when to apply** them |
-| 2 | Distinguish **notification**, **state transfer**, and **event sourcing** |
-| 3 | Design systems reacting to **domain events** across boundaries |
-| 4 | Handle **failure**, **ordering**, and **consistency** properly |
-| 5 | Evaluate trade-offs: **coupling** vs **complexity** vs **reliability** |
-| 6 | Apply **schema evolution** and **contract management** strategies |
-| 7 | Identify and avoid common **anti-patterns** |
-| 8 | Choose between **choreography** and **orchestration** |
-
-</grid>
-
----
-
-<!-- slide bg="#0b1120" -->
-
-## 📑 Agenda
-
-<grid drag="80 65" drop="center" style="font-size: 0.75em;">
-
-| Section | Topic |
-|---------|-------|
-| **1** | Why Event-Driven? |
-| **2** | Types of Events |
-| **3** | Architecture Patterns |
-| **4** | Designing Event Contracts |
-| **5** | Handling Failures |
-| **6** | Observability & Tracing |
-| **7** | Anti-Patterns |
-| **8** | Technology Comparison |
-| **9** | When to Use (and When Not To) |
-| **10** | Key Takeaways |
-| **11** | Practical Exercise |
-
-</grid>
+- Understand EDA patterns and **when to apply** them
+- Distinguish **notification**, **state transfer**, and **event sourcing**
+- Handle **failure**, **ordering**, and **consistency**
+- Evaluate **coupling** vs **complexity** vs **reliability**
+- Choose between **choreography** and **orchestration**
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-<grid drag="80 15" drop="center">
-
 # 1️⃣ Why Event-Driven?
-
-### The Problem with Request-Response
-
-</grid>
 
 ---
 
@@ -93,24 +46,17 @@ hash: true
 
 ~~~mermaid
 flowchart LR
-    OS[Order\nService] -->|req| PS[Payment\nService]
-    PS -->|req| IS[Inventory\nService]
-    IS -->|req| SS[Shipping\nService]
-    SS -->|res| IS
-    IS -->|res| PS
-    PS -->|res| OS
+    OS[Order] -->|req| PS[Payment]
+    PS -->|req| IS[Inventory]
+    IS -->|req| SS[Shipping]
+    SS -->|res| IS -->|res| PS -->|res| OS
 ~~~
-
-<grid drag="80 35" drop="center" pad="20px 0 0 0" style="font-size: 0.8em;">
 
 | Problem | Impact |
 |---------|--------|
-| 🕐 **Latency** | Total = sum of all service times |
-| 💥 **Availability** | Any failure = entire chain fails |
-| 🔗 **Coupling** | Adding a step = modify the caller |
-| 📈 **Scalability** | Bottleneck at slowest service |
-
-</grid>
+| 🕐 Latency | Sum of all services |
+| 💥 Availability | One fails = all fail |
+| 🔗 Coupling | New step = modify caller |
 
 ---
 
@@ -120,25 +66,18 @@ flowchart LR
 
 ~~~mermaid
 flowchart LR
-    OS[Order\nService] -->|publish| EB[Event Bus\nOrderPlaced]
+    OS[Order] -->|publish| EB[Event Bus<br>OrderPlaced]
     EB --> PAY[Payment]
     EB --> INV[Inventory]
     EB --> SHIP[Shipping]
     EB --> ANA[Analytics]
-
-    style ANA fill:#1e3a5f,stroke:#3b82f6,color:#93c5fd
 ~~~
 
-<grid drag="80 30" drop="center" pad="10px 0 0 0" style="font-size: 0.8em;">
-
-| Benefit | Description |
-|---------|-------------|
-| 🔓 **Decoupled** | Services react independently |
-| 🛡️ **Resilient** | Failures are isolated |
-| 🔌 **Extensible** | New consumers added without touching producer |
-| ⚡ **Scalable** | Each consumer scales independently |
-
-</grid>
+| Benefit | |
+|---------|---|
+| 🔓 Decoupled | Services react independently |
+| 🛡️ Resilient | Failures isolated |
+| 🔌 Extensible | Add consumers freely |
 
 ---
 
@@ -146,34 +85,18 @@ flowchart LR
 
 ## 💡 Core Principle
 
-<grid drag="80 25" drop="center" style="font-size: 1em; text-align: center; background: #1a2744; border-radius: 12px; padding: 20px; border-left: 4px solid #3b82f6;">
-
 > *"Tell the world what happened, don't tell services what to do."*
-
-</grid>
-
-<grid drag="80 30" drop="center" pad="60px 0 0 0" style="font-size: 0.85em;">
 
 | Approach | Example | Coupling |
 |----------|---------|----------|
-| **Command** | `ProcessPayment` | 🔴 Tightly coupled |
-| **Event** | `OrderPlaced` | 🟢 Loosely coupled |
-
-</grid>
-
-<grid drag="80 10" drop="bottom" style="font-size: 0.7em; color: #64748b; text-align: center;">
-
-Commands **direct** a target. Events **inform** the world.
-
-</grid>
+| **Command** | `ProcessPayment` | 🔴 Tight |
+| **Event** | `OrderPlaced` | 🟢 Loose |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
 # 2️⃣ Types of Events
-
-### Three Fundamental Patterns
 
 ---
 
@@ -183,25 +106,19 @@ Commands **direct** a target. Events **inform** the world.
 
 ~~~mermaid
 sequenceDiagram
-    participant OS as Order Service
+    participant OS as Order Svc
     participant EB as Event Bus
-    participant IS as Inventory Service
+    participant IS as Inventory Svc
 
     OS->>EB: OrderPlaced { orderId: 123 }
     EB->>IS: OrderPlaced { orderId: 123 }
-    IS->>OS: GET /orders/123 (callback)
-    OS-->>IS: Full order details
+    IS->>OS: GET /orders/123
+    OS-->>IS: Full details
     IS->>IS: Reserve inventory
 ~~~
 
-<grid drag="80 20" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Pros | Cons |
-|------|------|
-| ✅ Small messages | ❌ Temporal coupling — source must be up |
-| ✅ Always fresh data | ❌ Extra network hop per consumer |
-
-</grid>
+- ✅ Small messages, always fresh
+- ❌ Source must be available (temporal coupling)
 
 ---
 
@@ -211,85 +128,52 @@ sequenceDiagram
 
 ~~~mermaid
 sequenceDiagram
-    participant OS as Order Service
+    participant OS as Order Svc
     participant EB as Event Bus
-    participant IS as Inventory Service
+    participant IS as Inventory Svc
 
     OS->>EB: OrderPlaced { orderId, items[], customer{} }
-    EB->>IS: OrderPlaced { full payload }
-    IS->>IS: Reserve inventory (no callback)
+    EB->>IS: Full payload
+    IS->>IS: Reserve inventory
 ~~~
 
-<grid drag="80 20" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Pros | Cons |
-|------|------|
-| ✅ Full decoupling — consumer self-sufficient | ❌ Larger message size |
-| ✅ Works even if producer is down | ❌ Potentially stale data |
-
-</grid>
+- ✅ Fully decoupled, no callback needed
+- ❌ Larger messages, potentially stale
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 📜 Event Sourcing (Recap)
+## 📜 Event Sourcing
 
 ~~~mermaid
 flowchart LR
-    E1[OrderCreated] --> E2[ItemAdded]
-    E2 --> E3[ItemAdded]
-    E3 --> E4[PaymentReceived]
-    E4 --> E5[OrderShipped]
-    E5 --> STATE["Current State\n= replay all events"]
-
-    subgraph store["Event Store (append-only)"]
-        E1
-        E2
-        E3
-        E4
-        E5
-    end
+    E1[OrderCreated] --> E2[ItemAdded] --> E3[PaymentReceived] --> E4[OrderShipped]
+    E4 --> S["Current State<br>= replay all"]
 ~~~
 
-<grid drag="80 25" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Aspect | Detail |
-|--------|--------|
-| ✅ **Complete audit trail** | Every state change is recorded |
-| ✅ **Temporal queries** | Reconstruct state at any point in time |
-| ✅ **Debugging** | Replay events to reproduce bugs |
-| ❌ **Complexity** | Snapshots, projections, schema migration |
-
-</grid>
+- ✅ Complete audit trail, temporal queries
+- ❌ High complexity (snapshots, projections)
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 📊 Event Types Comparison
+## 📊 Comparison
 
-<grid drag="90 55" drop="center" style="font-size: 0.72em;">
-
-| Aspect | Notification | State Transfer | Event Sourcing |
-|--------|:-----------:|:--------------:|:--------------:|
-| **Payload size** | Small (IDs) | Large (full) | Medium (delta) |
+| | Notification | State Transfer | Sourcing |
+|---|:---:|:---:|:---:|
+| **Payload** | Small | Large | Medium |
 | **Coupling** | 🟡 Medium | 🟢 Low | 🟢 Low |
-| **Data freshness** | Always fresh | Potentially stale | Authoritative |
+| **Freshness** | Fresh | Stale risk | Authoritative |
 | **Complexity** | 🟢 Low | 🟢 Low | 🔴 High |
-| **Audit trail** | ❌ No | ❌ No | ✅ Complete |
-| **Consumer autonomy** | Low | High | High |
-| **Storage cost** | Low | Medium | High |
-
-</grid>
+| **Audit** | ❌ | ❌ | ✅ |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
 # 3️⃣ Architecture Patterns
-
-### Broker, Mediator, Mesh
 
 ---
 
@@ -300,68 +184,44 @@ flowchart LR
 ~~~mermaid
 flowchart TB
     subgraph P["Producers"]
-        OS[Order Service]
-        US[User Service]
-        PS[Product Service]
+        OS[Order Svc]
+        US[User Svc]
     end
-
-    subgraph B["Event Broker — Kafka / EventBridge"]
+    subgraph B["Broker"]
         T1[orders.placed]
-        T2[orders.shipped]
-        T3[users.registered]
-        T4[products.updated]
+        T2[users.registered]
     end
-
     subgraph C["Consumers"]
         INV[Inventory]
         PAY[Payment]
         NOT[Notification]
-        ANA[Analytics]
     end
-
-    OS --> T1 & T2
-    US --> T3
-    PS --> T4
-    T1 --> INV & PAY & ANA
+    OS --> T1
+    US --> T2
+    T1 --> INV & PAY
     T2 --> NOT
-    T3 --> NOT & ANA
-    T4 --> INV
 ~~~
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🌐 Event Mesh (Multi-Region)
+## 🌐 Event Mesh
 
 ~~~mermaid
 flowchart LR
     subgraph RA["Region A"]
-        KA[Kafka Cluster\nPrimary]
-        OSA[Order Service]
-        PSA[Payment Service]
-        OSA & PSA --- KA
+        KA[Kafka Primary]
     end
-
     subgraph RB["Region B"]
-        KB[Kafka Cluster\nReplica]
-        OSB[Order Service]
-        ANB[Analytics Service]
-        OSB & ANB --- KB
+        KB[Kafka Replica]
     end
-
-    KA <-->|"Mirroring\n(MirrorMaker / Replicator)"| KB
+    KA <-->|Mirroring| KB
 ~~~
 
-<grid drag="80 20" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Purpose | Detail |
-|---------|--------|
-| 🛡️ **Disaster recovery** | Automatic failover to replica |
-| ⚡ **Local performance** | Read from nearest region |
-| 🌍 **Geo-distribution** | Process events where users are |
-
-</grid>
+- 🛡️ Disaster recovery via failover
+- ⚡ Local read performance
+- 🌍 Geo-distributed processing
 
 ---
 
@@ -371,24 +231,14 @@ flowchart LR
 
 ~~~mermaid
 flowchart TB
-    E[Incoming Event] --> M[Event Mediator / Orchestrator]
-    M -->|Step 1| S1[Service A]
-    M -->|Step 2| S2[Service B]
-    M -->|Step 3| S3[Service C]
-    S1 -->|Result| M
-    S2 -->|Result| M
-    S3 -->|Result| M
+    E[Event] --> M[Mediator]
+    M -->|Step 1| S1[Svc A]
+    M -->|Step 2| S2[Svc B]
+    S1 & S2 -->|Result| M
 ~~~
 
-<grid drag="80 22" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Aspect | Detail |
-|--------|--------|
-| ✅ **Ordered workflows** | Central coordinator manages steps |
-| ✅ **Error handling** | Compensating actions from one place |
-| ❌ **Trade-off** | Mediator becomes a coupling & failure point |
-
-</grid>
+- ✅ Ordered workflows, central error handling
+- ❌ Mediator = coupling & failure point
 
 ---
 
@@ -396,52 +246,38 @@ flowchart TB
 
 ## ⚖️ Choreography vs Orchestration
 
-<grid drag="90 60" drop="center" style="font-size: 0.7em;">
-
-| Aspect | Choreography | Orchestration |
-|--------|:------------:|:-------------:|
-| **Control** | Decentralized — each service decides | Central orchestrator directs |
+| | Choreography | Orchestration |
+|---|:---:|:---:|
+| **Control** | Decentralized | Central |
 | **Coupling** | 🟢 Low | 🟡 Medium |
-| **Visibility** | 🔴 Hard to trace full flow | 🟢 Single place shows flow |
-| **Error handling** | Each service handles own errors | Orchestrator manages compensation |
-| **Scalability** | 🟢 Scales independently | 🟡 Orchestrator can bottleneck |
-| **Complexity** | Grows with # of services | Concentrated in orchestrator |
-| **Best for** | Simple reactive flows | Multi-step business processes |
-
-</grid>
+| **Visibility** | 🔴 Hard to trace | 🟢 Clear |
+| **Best for** | Simple flows | Multi-step processes |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-# 4️⃣ Designing Event Contracts
-
-### Schema, Versioning, Registry
+# 4️⃣ Event Contracts
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 📋 Event Schema Anatomy
+## 📋 Event Schema
 
 ~~~json
 {
-  "eventId":       "evt-uuid-12345",
-  "eventType":     "order.placed",
-  "version":       "2.0",
-  "timestamp":     "2025-03-01T10:30:00Z",
-  "source":        "order-service",
+  "eventId": "evt-uuid-12345",
+  "eventType": "order.placed",
+  "version": "2.0",
+  "timestamp": "2025-03-01T10:30:00Z",
+  "source": "order-service",
   "correlationId": "req-uuid-67890",
-  "causationId":   "evt-uuid-11111",
   "data": {
-    "orderId":     "order-123",
-    "customerId":  "cust-456",
-    "items":       [{ "productId": "prod-789", "qty": 2, "price": 29.99 }],
+    "orderId": "order-123",
+    "customerId": "cust-456",
+    "items": [{ "productId": "prod-789", "qty": 2 }],
     "totalAmount": 59.98
-  },
-  "metadata": {
-    "traceId": "trace-abc",
-    "environment": "production"
   }
 }
 ~~~
@@ -450,83 +286,35 @@ flowchart TB
 
 <!-- slide bg="#0f1b33" -->
 
-## 🔑 Key Envelope Fields
-
-<grid drag="88 60" drop="center" style="font-size: 0.68em;">
+## 🔑 Key Fields
 
 | Field | Purpose |
 |-------|---------|
-| `eventId` | Globally unique — used for **idempotency** |
-| `eventType` | Routing key — consumers filter on this |
-| `version` | Enables **schema evolution** without breakage |
-| `timestamp` | Wall-clock ordering reference |
-| `source` | Which service produced the event |
-| `correlationId` | Ties all events in a **user request** together |
-| `causationId` | The specific event that **caused** this one |
-| `traceId` | Links to **distributed tracing** (Jaeger / Zipkin) |
-
-</grid>
+| `eventId` | Idempotency key |
+| `eventType` | Consumer routing |
+| `version` | Schema evolution |
+| `correlationId` | Trace user request across services |
+| `causationId` | Parent → child event link |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🔄 Schema Evolution Rules
+## 🔄 Schema Evolution
 
-<grid drag="85 65" drop="center" style="font-size: 0.72em;">
+| ✅ Safe | ❌ Breaking |
+|---------|------------|
+| Add optional fields | Remove fields |
+| Add new event types | Rename fields |
+| Deprecate (keep sending) | Change field types |
 
-**✅ Safe Changes (backward compatible)**
-
-| Change | Why Safe |
-|--------|----------|
-| Add **optional** fields | Old consumers ignore them |
-| Add **new event types** | No existing consumer subscribed |
-| Deprecate fields (keep sending) | Consumers still receive expected data |
-
-**❌ Breaking Changes (require versioning)**
-
-| Change | Why Breaking |
-|--------|-------------|
-| Remove fields | Consumers expecting them will fail |
-| Rename fields | Same as remove + add |
-| Change field types | Deserialization breaks |
-| Change semantics | Silent data corruption |
-
-</grid>
-
----
-
-<!-- slide bg="#0f1b33" -->
-
-## 🗂️ Schema Registry Strategy
-
-~~~mermaid
-flowchart LR
-    P[Producer] -->|"1. Register schema"| SR[Schema Registry\nConfluent / Glue / Apicurio]
-    SR -->|"2. Validate\ncompatibility"| SR
-    SR -->|"3. Provide schema"| C[Consumer]
-    P -->|"4. Publish event"| B[Broker]
-    B --> C
-    SR -.->|"❌ Reject if breaking"| P
-~~~
-
-<grid drag="80 20" drop="bottom" pad="0 0 10px 0" style="font-size: 0.72em;">
-
-| Practice | Detail |
-|----------|--------|
-| Version events from **day one** | `v1`, `v2` in type or topic |
-| Support **multiple versions** during migration | Sunset old after consumers upgrade |
-| Use **consumer-driven contract tests** | Pact / Spring Cloud Contract |
-
-</grid>
+**Strategy:** Version from day one → schema registry → consumer-driven contract tests
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
 # 5️⃣ Handling Failures
-
-### Retries, DLQ, Ordering, Exactly-Once
 
 ---
 
@@ -536,180 +324,95 @@ flowchart LR
 
 ~~~mermaid
 flowchart TB
-    Q[Event Topic] --> C[Consumer]
-    C -->|Success| ACK["Acknowledge ✅"]
-    C -->|Failure| RETRY{"Retry?"}
-    RETRY -->|"Attempts < 3"| Q
-    RETRY -->|"Attempts ≥ 3"| DLQ["Dead Letter Queue ☠️"]
-    DLQ --> ALERT["Alert + Manual Review"]
-    DLQ --> REPLAY["Replay After Fix 🔄"]
+    Q[Topic] --> C[Consumer]
+    C -->|Success| ACK[Ack ✅]
+    C -->|Failure| R{"Retry < 3?"}
+    R -->|Yes| Q
+    R -->|No| DLQ[DLQ ☠️]
+    DLQ --> ALERT[Alert]
+    DLQ --> REPLAY[Replay 🔄]
 ~~~
 
-<grid drag="80 15" drop="bottom" pad="0 0 10px 0" style="font-size: 0.7em;">
-
-| Strategy | Detail |
-|----------|--------|
-| **Exponential backoff** | 1s → 2s → 4s to avoid thundering herd |
-| **DLQ monitoring** | Alerts on DLQ depth — never ignore it |
-
-</grid>
+- Use **exponential backoff**: 1s → 2s → 4s
+- **Monitor DLQ depth** — never ignore it
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🔢 Ordering Guarantees
+## 🔢 Ordering Solutions
 
-~~~mermaid
-flowchart LR
-    PUB["Published:\nOrderPlaced → OrderPaid → OrderShipped"]
-    REC["Received:\nOrderPaid → OrderPlaced → OrderShipped ❌"]
-    PUB -.->|"out of order"| REC
-~~~
-
-<grid drag="88 45" drop="center" pad="10px 0 0 0" style="font-size: 0.7em;">
-
-| # | Solution | How It Works |
-|---|----------|-------------|
-| 1 | **Partition by entity ID** | All events for `order-123` → same partition → ordered |
-| 2 | **Sequence numbers** | Monotonic seq per entity; consumer buffers & reorders |
-| 3 | **State machine validation** | Consumer rejects invalid transitions; retries later |
-| 4 | **Idempotent processing** | Design so reprocessing is safe regardless of order |
-
-</grid>
-
-<grid drag="80 8" drop="bottom" style="font-size: 0.65em; color: #94a3b8; text-align: center;">
-
-Kafka guarantees order **within a partition** — choose partition key wisely.
-
-</grid>
+| Solution | How |
+|----------|-----|
+| **Partition by entity ID** | Same entity → same partition → ordered |
+| **Sequence numbers** | Consumer buffers & reorders |
+| **State machine** | Reject invalid transitions, retry later |
+| **Idempotent processing** | Safe to reprocess regardless of order |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🎯 Exactly-Once Processing
+## 🎯 Exactly-Once Pattern
 
 ~~~mermaid
 flowchart TB
-    subgraph TX["BEGIN TRANSACTION"]
-        CHK{"event_id in\nprocessed_events?"}
-        CHK -->|YES| SKIP[Skip — idempotent guard]
-        CHK -->|NO| BIZ[Execute business logic]
-        BIZ --> WR[Write results to DB]
-        WR --> INS[Insert event_id\ninto processed_events]
-        INS --> OUT[Write outgoing events\nto outbox table]
+    subgraph TX["Transaction"]
+        CHK{"event_id<br>seen?"} -->|Yes| SKIP[Skip]
+        CHK -->|No| BIZ[Business logic]
+        BIZ --> WR[Write DB + mark processed]
+        WR --> OUT[Write to outbox]
     end
-    OUT --> COMMIT[COMMIT]
-    COMMIT --> RELAY[Outbox Relay\npolls or CDC]
-    RELAY --> BROKER[Event Broker]
+    OUT --> RELAY["CDC / Polling"] --> BROKER[Broker]
 ~~~
 
-<grid drag="80 8" drop="bottom" style="font-size: 0.65em; color: #94a3b8; text-align: center;">
-
-Reality: Brokers provide **at-least-once**. Exactly-once is the **consumer's job**.
-
-</grid>
+Brokers give **at-least-once**. Exactly-once is the **consumer's job**.
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 📤 Transactional Outbox Deep Dive
+# 6️⃣ Observability
+
+---
+
+<!-- slide bg="#0f1b33" -->
+
+## 🔍 Tracing Async Flows
 
 ~~~mermaid
 flowchart TB
-    subgraph DB["Service Database"]
-        BT["Business Tables\n(orders, payments)"]
-        OB["outbox_events\nid | event_type | payload | published"]
-        BT <-->|"same transaction"| OB
-    end
-
-    OB --> RELAY["Outbox Relay\n(Debezium CDC / Polling)"]
-    RELAY --> BROKER["Event Broker\n(Kafka / SQS)"]
+    OS[Order Svc] -->|OrderPlaced| PAY[Payment]
+    OS -->|OrderPlaced| INV[Inventory]
+    OS -->|OrderPlaced| ANA[Analytics]
+    PAY -->|PaymentProcessed| NOT[Notification]
 ~~~
-
-<grid drag="80 15" drop="bottom" pad="0 0 10px 0" style="font-size: 0.68em;">
-
-| Approach | Detail |
-|----------|--------|
-| **Polling** | Relay queries outbox on interval — simple but adds latency |
-| **CDC (Debezium)** | Reads DB write-ahead log → near real-time, no polling |
-
-</grid>
-
----
-
-<!-- slide bg="#0f1b33" -->
-
-# 6️⃣ Observability & Tracing
-
-### Seeing Through Async Flows
-
----
-
-<!-- slide bg="#0f1b33" -->
-
-## 🔍 Distributed Tracing for Events
-
-~~~mermaid
-flowchart TB
-    REQ["User Request\ncorrelationId: req-67890"] --> OS[Order Service]
-    OS -->|publish| OP["OrderPlaced\ntraceId: abc"]
-
-    OP --> PAY[Payment Svc\nspan: pay]
-    OP --> INV[Inventory Svc\nspan: inv]
-    OP --> ANA[Analytics Svc\nspan: ana]
-
-    PAY --> PP[PaymentProcessed]
-    INV --> SR[StockReserved]
-
-    PP --> NOT[Notification Svc\nspan: notify]
-~~~
-
-<grid drag="80 15" drop="bottom" pad="0 0 5px 0" style="font-size: 0.68em;">
 
 | Field | Role |
 |-------|------|
-| `correlationId` | Groups **all events** from one user action |
-| `causationId` | Links **parent → child** event |
-| `traceId` | Bridges into **Jaeger / Zipkin / OTEL** spans |
-
-</grid>
+| `correlationId` | Groups all events from one action |
+| `causationId` | Parent → child link |
+| `traceId` | Bridges to Jaeger / Zipkin |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 📈 Essential Metrics
+## 📈 Key Metrics
 
-<grid drag="88 60" drop="center" style="font-size: 0.7em;">
-
-| Metric | What to Monitor | Alert Threshold |
-|--------|----------------|-----------------|
-| **Consumer lag** | Events unprocessed per partition | > 10k or growing |
-| **Processing latency** | p50 / p95 / p99 per consumer | p99 > SLA |
-| **DLQ depth** | Messages in dead letter queue | > 0 |
-| **Throughput** | Events/sec produced & consumed | Drop > 50% |
-| **Error rate** | Failed processing attempts | > 1% |
-| **Redelivery rate** | Retried messages / total | > 5% |
-| **End-to-end latency** | Time from publish to final effect | > business SLA |
-
-</grid>
-
-<grid drag="80 8" drop="bottom" style="font-size: 0.6em; color: #94a3b8; text-align: center;">
-
-Tools: **Prometheus + Grafana**, **Datadog**, **AWS CloudWatch**, **Kafka Manager**
-
-</grid>
+| Metric | Alert When |
+|--------|-----------|
+| Consumer lag | > 10k or growing |
+| Processing latency (p99) | > SLA |
+| DLQ depth | > 0 |
+| Error rate | > 1% |
+| End-to-end latency | > business SLA |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
 # 7️⃣ Anti-Patterns
-
-### What NOT to Do
 
 ---
 
@@ -719,23 +422,10 @@ Tools: **Prometheus + Grafana**, **Datadog**, **AWS CloudWatch**, **Kafka Manage
 
 ~~~mermaid
 flowchart LR
-    A[UserClickedButton] --> B[FormValidated]
-    B --> C[FieldUpdated]
-    C --> D[UIRefreshed]
-    D --> E[LogWritten]
-    E --> F[MetricEmitted]
-    F --> G["... 🤯"]
+    A[ButtonClick] --> B[FormValidated] --> C[FieldUpdated] --> D[UIRefreshed] --> E["... 🤯"]
 ~~~
 
-<grid drag="80 30" drop="center" pad="20px 0 0 0" style="font-size: 0.75em;">
-
-| Problem | Fix |
-|---------|-----|
-| Everything is an event | Only publish **meaningful domain state changes** |
-| No clear boundaries | Define **bounded contexts** first |
-| UI events on the bus | Keep UI events **inside the frontend** |
-
-</grid>
+**Fix:** Only publish **meaningful domain state changes**, not UI or internal details.
 
 ---
 
@@ -745,47 +435,28 @@ flowchart LR
 
 ~~~mermaid
 flowchart LR
-    OS[Order Service\nOrderPlaced v1] --> PAY[Payment\nexpects EXACT fields]
-    OS --> INV[Inventory\nexpects EXACT order]
-    PAY -.->|"change one"| BREAK["💥 Break them all"]
-    INV -.-> BREAK
+    OS[Order Svc] --> PAY[Payment<br>expects exact fields]
+    OS --> INV[Inventory<br>expects exact order]
+    PAY & INV -.-> BREAK["💥 Change one = break all"]
 ~~~
 
-<grid drag="80 30" drop="center" pad="20px 0 0 0" style="font-size: 0.75em;">
-
-| Problem | Fix |
-|---------|-----|
-| Tight schema coupling | **Tolerant reader** — ignore unknown fields |
-| Assumed ordering | **Consumer-driven contracts** |
-| Shared event models | Each consumer owns its **own projection** |
-
-</grid>
+**Fix:** Tolerant reader, consumer-driven contracts, own projections.
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🔄 Event Cycles & Other Traps
+## 🔄 Event Cycles
 
 ~~~mermaid
 flowchart LR
-    OS[OrderService] -->|OrderPlaced| IS[InventoryService]
+    OS[OrderSvc] -->|OrderPlaced| IS[InventorySvc]
     IS -->|StockReserved| OS
     OS -->|OrderUpdated| IS
     IS -->|"??? ♾️"| OS
 ~~~
 
-<grid drag="80 35" drop="center" pad="15px 0 0 0" style="font-size: 0.7em;">
-
-| Anti-Pattern | Fix |
-|-------------|-----|
-| **Event Cycles** | Clear ownership; distinguish commands vs events |
-| **God Event** | One event with 50 fields → split by concern |
-| **Missing DLQ** | Always configure dead letter handling |
-| **Fire & Forget** | No monitoring = silent data loss |
-| **Sync over Async** | Consumer blocks waiting for response event → use HTTP |
-
-</grid>
+**Fix:** Clear ownership, distinguish commands vs events, break with workflow boundaries.
 
 ---
 
@@ -793,27 +464,19 @@ flowchart LR
 
 # 8️⃣ Technology Comparison
 
-### Choosing Your Event Backbone
-
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## 🛠️ Broker Comparison
+## 🛠️ Brokers
 
-<grid drag="92 60" drop="center" style="font-size: 0.6em;">
-
-| Feature | Apache Kafka | RabbitMQ | AWS EventBridge | AWS SNS+SQS | Pulsar |
-|---------|:---:|:---:|:---:|:---:|:---:|
-| **Model** | Log-based | Queue-based | Serverless bus | Pub-Sub + Queue | Log-based |
-| **Ordering** | Per partition | Per queue | Best-effort | FIFO option | Per partition |
-| **Replay** | ✅ Retention | ❌ | ✅ Archive | ❌ | ✅ |
-| **Throughput** | 🟢 Very high | 🟡 Medium | 🟡 Medium | 🟡 Medium | 🟢 Very high |
-| **Latency** | ~ms | ~µs | ~100ms | ~ms | ~ms |
-| **Ops burden** | 🔴 High | 🟡 Medium | 🟢 None | 🟢 None | 🔴 High |
-| **Best for** | High-vol streaming | Task queues | AWS-native | Simple fan-out | Multi-tenant |
-
-</grid>
+| | Kafka | RabbitMQ | EventBridge | SNS+SQS |
+|---|:---:|:---:|:---:|:---:|
+| **Model** | Log | Queue | Serverless | Pub-Sub |
+| **Ordering** | Partition | Queue | Best-effort | FIFO opt |
+| **Replay** | ✅ | ❌ | ✅ | ❌ |
+| **Throughput** | 🟢 High | 🟡 Med | 🟡 Med | 🟡 Med |
+| **Ops** | 🔴 High | 🟡 Med | 🟢 None | 🟢 None |
 
 ---
 
@@ -821,27 +484,18 @@ flowchart LR
 
 # 9️⃣ When to Use
 
-### (and When NOT To)
-
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-## ✅ Good Fit vs ❌ Poor Fit
-
-<grid drag="88 55" drop="center" style="font-size: 0.72em;">
+## ✅ vs ❌
 
 | ✅ Good Fit | ❌ Poor Fit |
 |------------|-----------|
-| Multiple consumers need same data | Simple CRUD with one consumer |
-| Services owned by different teams | Tight consistency required |
-| Add consumers without changing producer | Low-latency sync response needed |
-| Audit trail / event replay needed | Small monolithic application |
-| Spike handling / load leveling | Team unfamiliar with async patterns |
-| Event sourcing for complex domains | Simple request-response suffices |
-| Cross-region data replication | Single-region, single-database |
-
-</grid>
+| Multiple consumers | Simple CRUD |
+| Different team ownership | Tight consistency needed |
+| Audit trail / replay | Low-latency sync response |
+| Spike / load leveling | Small monolith |
 
 ---
 
@@ -851,14 +505,12 @@ flowchart LR
 
 ~~~mermaid
 flowchart TB
-    Q1{"Multiple services need\nto react to a change?"} -->|Yes| Q2{"Need real-time\nresponse to caller?"}
-    Q1 -->|No| SYNC["✅ Synchronous call"]
-
-    Q2 -->|Yes| HYBRID["✅ Hybrid: sync response\n+ async side effects"]
-    Q2 -->|No| Q3{"Complex multi-step\nworkflow?"}
-
-    Q3 -->|Yes| ORCH["✅ Event-driven\nwith Orchestration"]
-    Q3 -->|No| CHOREO["✅ Event-driven\nwith Choreography"]
+    Q1{"Multiple services<br>react?"} -->|No| SYNC[Sync call]
+    Q1 -->|Yes| Q2{"Need real-time<br>response?"}
+    Q2 -->|Yes| HYB["Hybrid:<br>sync + async"]
+    Q2 -->|No| Q3{"Complex<br>workflow?"}
+    Q3 -->|Yes| ORCH[Orchestration]
+    Q3 -->|No| CHOREO[Choreography]
 ~~~
 
 ---
@@ -867,32 +519,22 @@ flowchart TB
 
 # 🔟 Key Takeaways
 
----
-
-<!-- slide bg="#0f1b33" -->
-
-## 📌 Eight Things to Remember
-
-<grid drag="88 65" drop="center" style="font-size: 0.72em;">
-
 | # | Takeaway |
 |---|----------|
-| 1 | **Events** = what happened · **Commands** = what to do |
-| 2 | Choose **payload size** based on coupling tolerance |
-| 3 | **Schema evolution** is first-class — version from **day one** |
-| 4 | **Partition by entity ID** for ordering + **idempotency** for safety |
-| 5 | **Dead letter queues** are not optional — plan for failure |
-| 6 | Avoid **event soup** — only publish meaningful domain events |
-| 7 | **Hybrid** sync + async is common — not everything must be async |
-| 8 | **Correlation IDs** + distributed tracing = essential debugging |
-
-</grid>
+| 1 | Events = what happened · Commands = what to do |
+| 2 | Payload size ↔ coupling tolerance |
+| 3 | Version schemas from **day one** |
+| 4 | Partition by entity ID + idempotency |
+| 5 | DLQs are **not optional** |
+| 6 | Only publish **meaningful** domain events |
+| 7 | Hybrid sync+async is common |
+| 8 | Correlation IDs + tracing = essential |
 
 ---
 
 <!-- slide bg="#0f1b33" -->
 
-# 1️⃣1️⃣ Practical Exercise
+# 1️⃣1️⃣ Exercise
 
 ### 🍔 Food Delivery Platform
 
@@ -902,48 +544,16 @@ flowchart TB
 
 ## 🍔 Design Challenge
 
-<grid drag="85 70" drop="center" style="font-size: 0.68em;">
-
-**Services:** `Restaurant` · `Order` · `Delivery` · `Payment` · `Notification`
-
-**Flow:**
+**Services:** Restaurant · Order · Delivery · Payment · Notification
 
 | Step | Action |
 |------|--------|
 | 1 | Customer places order |
-| 2 | Restaurant confirms or rejects (5 min timeout) |
-| 3 | Payment is processed |
-| 4 | Driver is assigned |
-| 5 | Real-time tracking updates |
+| 2 | Restaurant confirms/rejects (5 min timeout) |
+| 3 | Payment processed |
+| 4 | Driver assigned |
+| 5 | Real-time tracking |
 | 6 | Delivery confirmed |
-
-**Constraints:**
-- Restaurant has **5 minutes** to accept
-- Payment failure after accept → **notify restaurant**
-- Customer sees **real-time status** updates
-- Analytics team wants **all events** for reporting
-
-</grid>
-
----
-
-<!-- slide bg="#0f1b33" -->
-
-## 💬 Discussion Questions
-
-<grid drag="85 65" drop="center" style="font-size: 0.78em;">
-
-| # | Question |
-|---|----------|
-| 1 | What events does **each service** publish? |
-| 2 | How do you handle **restaurant timeout** (no response in 5 min)? |
-| 3 | **Choreography or orchestration** for the order flow? Why? |
-| 4 | How do you push **real-time updates** to the customer? |
-| 5 | What happens if the **driver cancels** mid-delivery? |
-| 6 | Where does the **analytics service** subscribe? |
-| 7 | How do you guarantee **payment ↔ restaurant** consistency? |
-
-</grid>
 
 ---
 
@@ -953,43 +563,31 @@ flowchart TB
 
 ~~~mermaid
 flowchart TB
-    CUST[Customer] --> OS[OrderService]
-    OS -->|publish| OP[OrderPlaced]
-
-    OP --> RS[RestaurantSvc]
-    OP --> ANA[Analytics]
-    OP --> NOT1["NotificationSvc\n(order received)"]
-
-    RS -->|publish| OA[OrderAccepted]
-
-    OA --> PAY[PaymentService]
-    OA --> NOT2["NotificationSvc\n(restaurant confirmed)"]
-
-    PAY -->|publish| PP[PaymentProcessed]
-
-    PP --> DEL[DeliveryService]
-    DEL -->|publish| DA[DriverAssigned]
-    DA -->|stream| LU["LocationUpdated\n(real-time)"]
-    LU --> DC[DeliveryCompleted]
-
-    DC --> NOT3[NotificationSvc]
-    DC --> ANA2[Analytics]
+    OS[OrderSvc] -->|OrderPlaced| RS[RestaurantSvc]
+    OS -->|OrderPlaced| ANA[Analytics]
+    RS -->|OrderAccepted| PAY[PaymentSvc]
+    PAY -->|PaymentProcessed| DEL[DeliverySvc]
+    DEL -->|DriverAssigned| LOC["LocationUpdated<br>(stream)"]
+    LOC --> DC[DeliveryCompleted]
+    DC --> NOT[NotificationSvc]
 ~~~
+
+---
+
+<!-- slide bg="#0f1b33" -->
+
+## 💬 Discussion
+
+1. What events does **each service** publish?
+2. How to handle **restaurant timeout**?
+3. **Choreography or orchestration**? Why?
+4. How to push **real-time updates** to customer?
+5. What if the **driver cancels** mid-delivery?
 
 ---
 
 <!-- slide bg="#0b1120" -->
 
-<grid drag="80 30" drop="center" style="place-items: center;">
-
 # 🔷 Thank You
 
 ### Questions & Discussion
-
-</grid>
-
-<grid drag="60 10" drop="center" pad="60px 0 0 0" style="font-size: 0.8em; color: #64748b; text-align: center;">
-
-Event-Driven Architecture Guide — v2.0
-
-</grid>

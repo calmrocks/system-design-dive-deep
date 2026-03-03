@@ -1,146 +1,26 @@
-/**
- * EDA Professional Dark Theme
- * Place in: <vault>/.obsidian/plugins/advanced-slides/css/eda-theme.css
- */
-
 :root {
-    --r-background-color:    #0b1120;
-    --r-main-font:           'Inter', 'Segoe UI', system-ui, sans-serif;
-    --r-main-font-size:      28px;
-    --r-main-color:          #e2e8f0;
-    --r-heading-font:        'Inter', 'Segoe UI', system-ui, sans-serif;
-    --r-heading-color:       #f1f5f9;
-    --r-heading1-size:       1.8em;
-    --r-heading2-size:       1.35em;
-    --r-heading3-size:       1.05em;
-    --r-link-color:          #60a5fa;
-    --r-link-color-hover:    #93c5fd;
-    --r-selection-background-color: #2563eb44;
-    --r-code-font:           'JetBrains Mono', 'Fira Code', monospace;
+    --r-background-color: #0b1120;
+    --r-main-font: 'Inter', system-ui, sans-serif;
+    --r-main-font-size: 28px;
+    --r-main-color: #e2e8f0;
+    --r-heading-font: 'Inter', system-ui, sans-serif;
+    --r-heading-color: #f1f5f9;
+    --r-link-color: #60a5fa;
+    --r-code-font: 'JetBrains Mono', monospace;
 }
-
-.reveal {
-    background: linear-gradient(170deg, #0b1120 0%, #111d35 100%);
-}
-
-.reveal h1,
-.reveal h2,
-.reveal h3 {
-    text-transform: none;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-}
-
-.reveal h1 { color: #60a5fa; }
-.reveal h2 { color: #93c5fd; border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
-.reveal h3 { color: #cbd5e1; }
-
-/* Tables */
-.reveal table {
-    border-collapse: collapse;
-    width: 100%;
-    font-size: 0.78em;
-}
-
-.reveal table th {
-    background: #1e3a5f;
-    color: #e2e8f0;
-    padding: 10px 14px;
-    border: 1px solid #2d4a6f;
-    font-weight: 600;
-}
-
-.reveal table td {
-    background: #0f1b33;
-    color: #cbd5e1;
-    padding: 8px 14px;
-    border: 1px solid #1e3050;
-}
-
-.reveal table tr:nth-child(even) td {
-    background: #142240;
-}
-
-/* Code blocks */
-.reveal pre {
-    background: #0a0f1e;
-    border: 1px solid #1e3050;
-    border-left: 3px solid #3b82f6;
-    border-radius: 8px;
-    font-size: 0.58em;
-    padding: 16px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-}
-
-.reveal code {
-    color: #93c5fd;
-    font-family: var(--r-code-font);
-}
-
-.reveal pre code {
-    color: #e2e8f0;
-    line-height: 1.5;
-}
-
-/* Inline code */
-.reveal p code,
-.reveal li code,
-.reveal td code {
-    background: #1e293b;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.88em;
-    color: #60a5fa;
-}
-
-/* Blockquotes */
-.reveal blockquote {
-    background: #1a2744;
-    border-left: 4px solid #3b82f6;
-    border-radius: 8px;
-    padding: 16px 24px;
-    font-style: italic;
-    color: #93c5fd;
-    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.1);
-}
-
-/* Lists */
-.reveal ul, .reveal ol {
-    color: #cbd5e1;
-}
-
-.reveal li::marker {
-    color: #3b82f6;
-}
-
-/* Mermaid overrides */
-.reveal .mermaid {
-    font-size: 0.7em;
-}
-
-/* Strong / bold */
-.reveal strong {
-    color: #60a5fa;
-    font-weight: 700;
-}
-
-/* Links */
-.reveal a {
-    color: var(--r-link-color);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-/* Slide number */
-.reveal .slide-number {
-    background: #1e3a5f;
-    color: #60a5fa;
-    font-size: 14px;
-    padding: 4px 10px;
-    border-radius: 6px 0 0 0;
-}
-
-/* Progress bar */
-.reveal .progress span {
-    background: linear-gradient(90deg, #2563eb, #60a5fa);
-}
+.reveal { background: linear-gradient(170deg, #0b1120, #111d35); }
+.reveal h1 { color: #60a5fa; text-transform: none; }
+.reveal h2 { color: #93c5fd; text-transform: none; border-bottom: 2px solid #1e3a5f; padding-bottom: 6px; }
+.reveal h3 { color: #cbd5e1; text-transform: none; }
+.reveal table { border-collapse: collapse; width: 100%; font-size: 0.78em; }
+.reveal table th { background: #1e3a5f; color: #e2e8f0; padding: 8px 12px; border: 1px solid #2d4a6f; }
+.reveal table td { background: #0f1b33; color: #cbd5e1; padding: 6px 12px; border: 1px solid #1e3050; }
+.reveal table tr:nth-child(even) td { background: #142240; }
+.reveal pre { background: #0a0f1e; border-left: 3px solid #3b82f6; border-radius: 8px; font-size: 0.55em; padding: 14px; }
+.reveal code { color: #93c5fd; }
+.reveal pre code { color: #e2e8f0; line-height: 1.5; }
+.reveal p code, .reveal td code { background: #1e293b; padding: 2px 5px; border-radius: 4px; font-size: 0.88em; color: #60a5fa; }
+.reveal blockquote { background: #1a2744; border-left: 4px solid #3b82f6; border-radius: 8px; padding: 14px 20px; color: #93c5fd; }
+.reveal strong { color: #60a5fa; }
+.reveal .slide-number { background: #1e3a5f; color: #60a5fa; font-size: 14px; padding: 4px 10px; border-radius: 6px 0 0 0; }
+.reveal .progress span { background: linear-gradient(90deg, #2563eb, #60a5fa); }
