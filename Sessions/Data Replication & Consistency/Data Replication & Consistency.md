@@ -452,16 +452,16 @@ flowchart TB
 
 ## 8. Key Takeaways
 
-| # | Takeaway |
-|---|----------|
-| 1 | Replication serves availability, read scale, and geographic proximity |
-| 2 | Synchronous replication = strong consistency but slow writes |
-| 3 | Asynchronous replication = fast writes but risk of data loss |
-| 4 | Single-leader is simplest; multi-leader and leaderless add conflict complexity |
-| 5 | Eventual consistency is fine for most reads; know when it's not |
-| 6 | Read-your-own-writes is the most common consistency requirement |
-| 7 | Conflict resolution strategy must match your domain (LWW vs merge vs CRDT) |
-| 8 | Failover is where theory meets reality — test it regularly |
+| #   | Takeaway                                                                       |
+| --- | ------------------------------------------------------------------------------ |
+| 1   | Replication serves availability, read scale, and geographic proximity          |
+| 2   | Synchronous replication = strong consistency but slow writes                   |
+| 3   | Asynchronous replication = fast writes but risk of data loss                   |
+| 4   | Single-leader is simplest; multi-leader and leaderless add conflict complexity |
+| 5   | Eventual consistency is fine for most reads; know when it's not                |
+| 6   | Read-your-own-writes is the most common consistency requirement                |
+| 7   | Conflict resolution strategy must match your domain (LWW vs merge vs CRDT)     |
+| 8   | Failover is where theory meets reality — test it regularly                     |
 
 ---
 
