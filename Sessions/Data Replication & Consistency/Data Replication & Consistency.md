@@ -2,10 +2,10 @@
 
 ## Overview
 
-| Attribute | Details |
-|-----------|---------|
-| Duration | 60 minutes |
-| Level | Intermediate to Advanced |
+| Attribute     | Details                                                 |
+| ------------- | ------------------------------------------------------- |
+| Duration      | 60 minutes                                              |
+| Level         | Intermediate to Advanced                                |
 | Prerequisites | Database fundamentals, Distributed Transactions session |
 
 ## Learning Objectives
