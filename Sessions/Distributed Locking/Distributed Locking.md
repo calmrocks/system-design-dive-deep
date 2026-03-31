@@ -441,12 +441,12 @@ Fix: Use optimistic concurrency where possible
 
 ## 7. When to Use (and When Not To)
 
-| ✅ Good Fit | ❌ Poor Fit |
-|------------|-----------|
-| Preventing duplicate job processing | Protecting every database write |
-| Leader election among instances | High-throughput data updates |
-| Coordinating access to external APIs | When optimistic concurrency works |
-| Distributed cron / scheduled tasks | Single-service data consistency |
+| ✅ Good Fit                              | ❌ Poor Fit                             |
+| --------------------------------------- | -------------------------------------- |
+| Preventing duplicate job processing     | Protecting every database write        |
+| Leader election among instances         | High-throughput data updates           |
+| Coordinating access to external APIs    | When optimistic concurrency works      |
+| Distributed cron / scheduled tasks      | Single-service data consistency        |
 | Resource reservation (seats, inventory) | When you can use database transactions |
 
 ### Decision Framework
