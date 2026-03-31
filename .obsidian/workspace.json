@@ -29,12 +29,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Sessions/Distributed Locking/Discussion Topics.md",
+                "file": "Sessions/Distributed Locking/Distributed Locking.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Discussion Topics"
+              "title": "Distributed Locking"
             }
           }
         ],
@@ -206,6 +206,7 @@
   },
   "active": "6419881ede51204d",
   "lastOpenFiles": [
+    "Sessions/Distributed Locking/Discussion Topics.md",
     "Sessions/Data Replication & Consistency/Data Replication & Consistency.md",
     "Sessions/Data Replication & Consistency/Discussion Topics.md",
     "Sessions/Data Replication & Consistency/Materials.md",
@@ -232,7 +233,6 @@
     "SystemDesign/Sessions/Circuit Breaker/Circuit Breaker.md",
     "SystemDesign/SystemDesign/Sessions/Cache/Cache.md",
     "SystemDesign/README.md",
-    "SystemDesign/Prompts.md",
     "SystemDesign/SystemDesign/Sessions/Cache",
     "SystemDesign/SystemDesign/Sessions",
     "SystemDesign/SystemDesign",
